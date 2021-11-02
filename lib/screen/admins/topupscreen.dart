@@ -59,7 +59,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
             "transaction_amount": amount,
             "transaction_date": date.toIso8601String().split('T')[0],
             "transaction_depositor": '62'+_depositorCon.text,
-            "transaction_receiver": '62'+_receiverCon.text
+            "transaction_receiver":  _isDebitCon ? '' : '62'+_receiverCon.text
           }),
         );
 
@@ -279,6 +279,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
             },
           ),
           TextFormField(
+            enabled: !_isDebitCon,
             controller: _receiverCon,
             keyboardType: TextInputType.phone,
             maxLength: 14,
@@ -287,7 +288,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
               prefixText: '+62 ',
             ),
             validator: (e) {
-              if (e == null || e.isEmpty) return 'Please fill the field.';
+              if (!_isDebitCon) if (e == null || e.isEmpty) return 'Please fill the field.';
               return null;
             },
           ),
@@ -325,7 +326,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
     );
   }
 
-  Widget _listView(List<Transaction> list) {
+  /*Widget _listView(List<Transaction> list) {
     int nameFlex = 1;
     int amountFlex = 1;
     int dateFlex = 1;
@@ -387,6 +388,67 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
           ),
       ],
     );
+  }*/
+
+  Widget _listView(List<Transaction> list) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var o in list)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(o.transaction_date.toIso8601String().split('T')[0], style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12.0,
+                      ),),
+                      Text(o.is_debit ? 'Debit' : 'Kredit', style: TextStyle(
+                        color: o.is_debit ? Colors.blue : Colors.red,
+                        fontSize: 12.0,
+                      ),),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(o.transactionName, style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w700,
+                        ),),
+                        const SizedBox(height: 4.0,),
+                        Text('IDR ${o.transaction_amount}', style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w500,
+                        ),),
+                      ],
+                    ),
+                  ),
+                  Text('Depositor: '+o.transaction_depositor, style: const TextStyle(
+                    color: Colors.deepOrange,
+                    fontSize: 14.0,
+                  ),),
+                  const SizedBox(height: 2.0,),
+                  Text('Receiver: '+o.transaction_receiver, style: TextStyle(
+                    color: Colors.blue[800],
+                    fontSize: 14.0,
+                  ),),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   late ScrollController _scrollController;
@@ -411,28 +473,23 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
           padding: const EdgeInsets.all(16.0),
           child: _addOrUpdateView(),
         )),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: FutureBuilder<List<Transaction>>(
-                key: ValueKey(_rebuildListCount),
-                future: _getList(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return _listView(snapshot.data!);
-                  }
-                  else if (snapshot.hasError) {
-                    return Column(
-                      children: const [
-                        Text('Terjadi Kesalahan')
-                      ],
-                    );
-                  }
+        FutureBuilder<List<Transaction>>(
+            key: ValueKey(_rebuildListCount),
+            future: _getList(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return _listView(snapshot.data!);
+              }
+              else if (snapshot.hasError) {
+                return Column(
+                  children: const [
+                    Text('Terjadi Kesalahan')
+                  ],
+                );
+              }
 
-                  return const Center(child: CircularProgressIndicator());
-                }
-            ),
-          ),
+              return const Center(child: CircularProgressIndicator());
+            }
         ),
       ],
     );

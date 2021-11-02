@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'envar.dart';
 
 class Temp {
+  static double? total;
   static List<Transaction>? transactionList;
 
   static Future<void> fillTransactionData([String? accountId, int retryCount=0]) async {
@@ -22,8 +23,10 @@ class Temp {
         print(response.statusCode);
         print(response.body);
         if (response.statusCode == 200) {
-          final list = jsonDecode(response.body)['response'] as List;
+          final body = jsonDecode(response.body);
+          final list = body['response'] as List;
 
+          total = (body['sum'] as int).toDouble();
           transactionList = list.map<Transaction>((e) => Transaction.parse(e)).toList();
         }
         else {
@@ -34,5 +37,10 @@ class Temp {
         throw Exception();
       }
     } on TimeoutException {return fillTransactionData(accountId, ++retryCount);}
+  }
+
+  static void deleteTransactionData() {
+    total = null;
+    transactionList = null;
   }
 }

@@ -16,17 +16,10 @@ class TopupScreen extends StatefulWidget {
 class _TopupScreenState extends State<TopupScreen> {
 
   Widget _listView(List<Transaction> list) {
-    int nameFlex = 1;
-    int amountFlex = 1;
-    int dateFlex = 1;
-    int depositorFlex = 1;
-    int receiverFlex = 1;
-    int isDebitFlex = 1;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
+        /*Row(
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -74,6 +67,44 @@ class _TopupScreenState extends State<TopupScreen> {
               ),
               const Divider(thickness: 1.0,),
             ],
+          ),*/
+        for (var o in list)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(o.transaction_date.toIso8601String().split('T')[0], style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12.0,
+                  ),),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(o.transactionName, style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w700,
+                        ),),
+                        const SizedBox(height: 4.0,),
+                        Text('IDR ${o.transaction_amount}', style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w500,
+                        ),),
+                      ],
+                    ),
+                  ),
+                  Text(o.transaction_receiver, style: const TextStyle(
+                    color: Colors.deepOrange,
+                    fontSize: 14.0,
+                  ),),
+                ],
+              ),
+            ),
           ),
       ],
     );
@@ -93,16 +124,27 @@ class _TopupScreenState extends State<TopupScreen> {
       controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
       children: [
-        Card(child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text('My Transaction', style: Theme.of(context).textTheme.headline3,),
+        Card(child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Transactions', style: Theme.of(context).textTheme.headline3, textAlign: TextAlign.center,),
+                  const SizedBox(height: 16.0,),
+                  Text('My Wallet: IDR ${Temp.total!}', style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14.0,
+                    //fontWeight: FontWeight.w500,
+                  ),),
+                ],
+              ),
+            ),
+            Container(color: Colors.blue, height: 6.0,),
+          ],
         )),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _listView(Temp.transactionList!),
-          ),
-        ),
+        _listView(Temp.transactionList!),
       ],
     );
   }

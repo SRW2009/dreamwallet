@@ -9,7 +9,6 @@ import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/screen/topup.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-//import 'package:qr_code_dart_scan/qr_code_dart_scan.dart';
 import 'package:http/http.dart' as http;
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
@@ -28,8 +27,26 @@ class _BuyerPageState extends State<BuyerPage> {
     const BuyerScreen(), const TopupScreen(),
   ];
 
+  late Future<Account?> _account;
   void _load() async {
-    String phone = (await Account.getAccount())!.mobile;
+    _account = Account.getAccount();
+    String phone = (await _account)!.mobile;
+    await Temp.fillTransactionData(phone);
+
+    if (Temp.transactionList != null) {
+      setState(() {
+        _isLoaded = true;
+      });
+    }
+  }
+
+  void reload() async {
+    setState(() {
+      _isLoaded = false;
+    });
+
+    Temp.deleteTransactionData();
+    String phone = (await _account)!.mobile;
     await Temp.fillTransactionData(phone);
 
     if (Temp.transactionList != null) {
@@ -56,17 +73,35 @@ class _BuyerPageState extends State<BuyerPage> {
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'Drawer Header',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
+            FutureBuilder<Account?>(
+              future: _account,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final data = snapshot.data!;
+
+                  return UserAccountsDrawerHeader(
+                    accountName: Text(data.name),
+                    accountEmail: Text(data.mobile),
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage('images/dreampaybg.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                }
+
+                return const UserAccountsDrawerHeader(
+                  accountName: null,
+                  accountEmail: null,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('images/dreampaybg.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              }
             ),
             ListTile(
               selected: (_bodyIndex == 0),
@@ -106,6 +141,7 @@ class BuyerScreen extends StatefulWidget {
 }
 
 class _BuyerScreenState extends State<BuyerScreen> {
+  final GlobalKey<_BuyerPageState> _pageState = GlobalKey();
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   Barcode? result;
@@ -123,12 +159,22 @@ class _BuyerScreenState extends State<BuyerScreen> {
         String phone = resultText.split(';')[1].split(':')[1];
         String amount = resultText.split(';')[2].split(':')[1];
 
+        final canPay = (Temp.total! - int.parse(amount)) >= 0;
         final isSuccess = await Navigator.push<bool>(context, DialogRoute(context: context, builder: (c) => AlertDialog(
-          title: const Text('Perhatian'),
-          content: Text('Are you sure you want to make a transaction with:\n'
-              'Name: $name \n'
-              'User: $phone \n'
-              'Amount: $amount'),
+          title: const Text('Attention'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Are you sure you want to make a transaction with:\n'
+                  'Name: $name \n'
+                  'User: $phone \n'
+                  'Amount: $amount'),
+              if (!canPay) const Padding(
+                padding: EdgeInsets.only(top: 6.0),
+                child: Text('Not enough money to make this transaction!', style: TextStyle(color: Colors.red),),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               child: const Text('NO'),
@@ -138,9 +184,9 @@ class _BuyerScreenState extends State<BuyerScreen> {
             ),
             TextButton(
               child: const Text('YES'),
-              onPressed: () {
+              onPressed: canPay ? () {
                 Navigator.pop(c, true);
-              },
+              } : null,
             ),
           ],
         )));
@@ -203,7 +249,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
           headers: EnVar.HTTP_HEADERS(),
           body: jsonEncode({
             "is_debit": false,
-            "transactionName": name,
+            "TransactionName": name,
             "transaction_amount": parsedAmount,
             "transaction_date": date.toIso8601String().split('T')[0],
             "transaction_depositor": myPhone,
@@ -216,6 +262,8 @@ class _BuyerScreenState extends State<BuyerScreen> {
         if (response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Success')));
+
+          _pageState.currentState!.reload();
         }
         else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -267,48 +315,6 @@ class _BuyerScreenState extends State<BuyerScreen> {
                         onQRViewCreated: _onQRViewCreated,
                         overlay: QrScannerOverlayShape(),
                       ),
-                      /*QRCodeDartScanView(
-                        onCapture: (Result result) async {
-                          if (!_dialogShowing) {
-                            setState(() {
-                              _dialogShowing = true;
-                            });
-
-                            String resultText = result.text;
-                            String name = resultText.split(';')[0].split(':')[1];
-                            String phone = resultText.split(';')[1].split(':')[1];
-                            String amount = resultText.split(';')[2].split(':')[1];
-
-                            final isSuccess = await Navigator.push<bool>(context, DialogRoute(context: context, builder: (c) => AlertDialog(
-                              title: const Text('Perhatian'),
-                              content: Text('Are you sure you want to make a transaction with:\n'
-                                  'Name: $name \n'
-                                  'User: $phone \n'
-                                  'Amount: $amount'),
-                              actions: [
-                                TextButton(
-                                  child: const Text('NO'),
-                                  onPressed: () {
-                                    Navigator.pop(c, false);
-                                  },
-                                ),
-                                TextButton(
-                                  child: const Text('YES'),
-                                  onPressed: () {
-                                    Navigator.pop(c, true);
-                                  },
-                                ),
-                              ],
-                            )));
-                            if (isSuccess != null && isSuccess) {
-                              _doPayment(name, phone, amount);
-                            }
-                            setState(() {
-                              _dialogShowing = false;
-                            });
-                          }
-                        },
-                      ),*/
                     ],
                   ),
                 ),

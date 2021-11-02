@@ -47,15 +47,13 @@ class AdminPageState extends State<AdminPage>{
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
+            const UserAccountsDrawerHeader(
+              accountName: Text('Admin'),
+              accountEmail: null,
               decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'Drawer Header',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+                image: DecorationImage(
+                  image: AssetImage('images/dreampaybg.png'),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
@@ -73,7 +71,7 @@ class AdminPageState extends State<AdminPage>{
             ListTile(
               selected: (_bodyIndex == 1),
               leading: const Icon(Icons.account_balance_wallet),
-              title: const Text('Topup'),
+              title: const Text('Transaction'),
               onTap:() {
                 setState(() {
                   _bodies[1] = const AdminTopupScreen();

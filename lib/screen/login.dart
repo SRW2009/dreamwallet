@@ -285,7 +285,7 @@ class _LoginPageState extends State<LoginPage> {
               content: const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0),
                 child: Text(
-                  'Alright, we\'ll send you a link through Whatsapp to complete your registration. Please check your Whatsapp.',
+                  'Alright, please wait until your account is confirmed by admin.',
                   style: TextStyle(color: Colors.white),
                 ),
               ),

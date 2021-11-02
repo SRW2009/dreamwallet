@@ -6,7 +6,6 @@ import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:dreamwallet/style/inputdecoration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:qr/qr.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class SellerPage extends StatefulWidget {
@@ -24,8 +23,10 @@ class _SellerPageState extends State<SellerPage> {
     const SellerScreen(), const TopupScreen(),
   ];
 
+  late Future<Account?> _account;
   void _load() async {
-    String phone = (await Account.getAccount())!.mobile;
+    _account = Account.getAccount();
+    String phone = (await _account)!.mobile;
     await Temp.fillTransactionData(phone);
 
     if (Temp.transactionList != null) {
@@ -52,17 +53,35 @@ class _SellerPageState extends State<SellerPage> {
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'Drawer Header',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
+            FutureBuilder<Account?>(
+                future: _account,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final data = snapshot.data!;
+
+                    return UserAccountsDrawerHeader(
+                      accountName: Text(data.name),
+                      accountEmail: Text(data.mobile),
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('images/dreampaybg.png'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return const UserAccountsDrawerHeader(
+                    accountName: null,
+                    accountEmail: null,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage('images/dreampaybg.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                }
             ),
             ListTile(
               selected: (_bodyIndex == 0),

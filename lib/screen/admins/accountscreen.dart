@@ -378,7 +378,7 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
             const SizedBox(width: 8.0,),
             Expanded(flex: isActiveFlex, child: Text('Active', style: Theme.of(context).textTheme.headline6,)),
             const SizedBox(width: 8.0,),
-            SizedBox(width: 180.0, child: Text('Transaction', style: Theme.of(context).textTheme.headline6,)),
+            SizedBox(width: 110.0, child: Text('Transaction', style: Theme.of(context).textTheme.headline6,)),
             const SizedBox(width: 8.0,),
             SizedBox(width: 80.0, child: Text('Action', style: Theme.of(context).textTheme.headline6,)),
           ],
@@ -411,9 +411,9 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
                     ],
                   )),
                   const SizedBox(width: 8.0,),
-                  SizedBox(width: 180.0, child: TextButton(
+                  SizedBox(width: 110.0, child: TextButton(
                     style: MyButtonStyle.primaryTextButtonStyle(context),
-                    child: const Text('SHOW TRANSACTIONS'),
+                    child: const Text('SHOW'),
                     onPressed: () {
                       widget.openTransactionWithAccountId(o.mobile);
                     },
