@@ -75,7 +75,7 @@ class _TopupScreenState extends State<TopupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(o.transaction_date.toIso8601String().split('T')[0], style: const TextStyle(
+                  Text(o.transaction_date.split('T')[0], style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 12.0,
                   ),),

@@ -20,11 +20,12 @@ class AdminTopupScreen extends StatefulWidget {
 class _AdminTopupScreenState extends State<AdminTopupScreen> {
 
   int _rebuildListCount = 0;
+  int _totalMoney = 0;
   final _formKey = GlobalKey<FormState>();
   final _nameCon = TextEditingController();
   final _amountCon = TextEditingController();
   final _dateCon = TextEditingController();
-  final _depositorCon = TextEditingController();
+  late final TextEditingController _depositorCon;
   final _receiverCon = TextEditingController();
   bool _isDebitCon = false;
 
@@ -39,10 +40,10 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
               const SnackBar(content: Text('Retrying...')));
         }
 
-        double amount;
+        int amount;
         DateTime date;
         try {
-          amount = double.parse(_amountCon.text);
+          amount = int.parse(_amountCon.text);
           date = DateTime.parse(_dateCon.text);
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +74,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
             _nameCon.text = '';
             _amountCon.text = '';
             _dateCon.text = '';
-            _depositorCon.text = '';
+            if (widget.accountId == null) _depositorCon.text = '';
             _receiverCon.text = '';
             _isDebitCon = false;
 
@@ -93,113 +94,6 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
     } on TimeoutException {_add(++retryCount);}
   }
 
-  /*Future<void> _update([int retryCount=0, Transaction? transaction]) async {
-    try {
-      if (retryCount != 3) {
-        if (retryCount == 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Loading...')));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Retrying...')));
-        }
-
-        String url;
-        http.Response response;
-        if (account != null) {
-          url = '${EnVar.API_URL_HOME}/update/${account.mobile}';
-          response = await http.post(
-            Uri.parse(url),
-            headers: EnVar.HTTP_HEADERS(),
-            body: jsonEncode({
-              //"account_mobile": account.mobile,
-              "account_name": account.name,
-              "account_status": account.status.toChar(),
-              "is_active": account.isActive,
-            }),
-          );
-        }
-        else {
-          url = '${EnVar.API_URL_HOME}/update/$_updateId';
-          response = await http.post(
-            Uri.parse(url),
-            headers: EnVar.HTTP_HEADERS(),
-            body: jsonEncode({
-              "account_mobile": _mobileCon.text,
-              "account_name": _nameCon.text,
-              "account_status": AccountPrivilege.parseInt(_statusCon)!.toChar(),
-            }),
-          );
-        }
-
-        print(response.statusCode);
-        print(response.body);
-        if (response.statusCode == 202) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Success')));
-
-          setState(() {
-            _updateId = null;
-            _nameCon.text = '';
-            _mobileCon.text = '';
-            _statusCon = 0;
-
-            _rebuildListCount++;
-          });
-        }
-        else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed')));
-        }
-      }
-      else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed after 3 retry.')));
-      }
-
-    } on TimeoutException {_update(++retryCount, account);}
-  }
-
-  Future<void> _delete(String id, [int retryCount=0]) async {
-    try {
-      if (retryCount != 3) {
-        if (retryCount == 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Loading...')));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Retrying...')));
-        }
-
-        final url = '${EnVar.API_URL_HOME}/delete/$id';
-        final response = await http.post(
-          Uri.parse(url),
-          headers: EnVar.HTTP_HEADERS(),
-        );
-
-        print(response.statusCode);
-        print(response.body);
-        if (response.statusCode == 202) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Success')));
-
-          setState(() {
-            _rebuildListCount++;
-          });
-        }
-        else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed')));
-        }
-      }
-      else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed after 3 retry.')));
-      }
-
-    } on TimeoutException {_delete(id, ++retryCount);}
-  }*/
-
   Future<List<Transaction>> _getList([int retryCount=0]) async {
     try {
       if (retryCount != 3) {
@@ -212,7 +106,14 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
         print(response.statusCode);
         print(response.body);
         if (response.statusCode == 200) {
-          final list = jsonDecode(response.body)['response'] as List;
+          final data = jsonDecode(response.body);
+          final list = data['response'] as List;
+
+          if (widget.accountId != null) {
+            setState(() {
+              _totalMoney = data['sum'];
+            });
+          }
 
           return list.map<Transaction>((e) => Transaction.parse(e)).toList();
         }
@@ -236,7 +137,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
           TextFormField(
             controller: _nameCon,
             decoration: const InputDecoration(
-              labelText: 'Name',
+              labelText: 'Transaction name',
             ),
             validator: (e) {
               if (e == null || e.isEmpty) return 'Please fill the field.';
@@ -246,7 +147,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
           TextFormField(
             controller: _amountCon,
             decoration: const InputDecoration(
-              labelText: 'Amount',
+              labelText: 'Transaction amount',
               prefixText: 'IDR ',
             ),
             validator: (e) {
@@ -257,7 +158,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
           TextFormField(
             controller: _dateCon,
             decoration: const InputDecoration(
-              labelText: 'Date',
+              labelText: 'Transaction date',
               hintText: '1999-12-30',
             ),
             validator: (e) {
@@ -266,6 +167,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
             },
           ),
           TextFormField(
+            enabled: widget.accountId == null,
             controller: _depositorCon,
             keyboardType: TextInputType.phone,
             maxLength: 14,
@@ -326,70 +228,6 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
     );
   }
 
-  /*Widget _listView(List<Transaction> list) {
-    int nameFlex = 1;
-    int amountFlex = 1;
-    int dateFlex = 1;
-    int depositorFlex = 1;
-    int receiverFlex = 1;
-    int isDebitFlex = 1;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: nameFlex, child: Text('Name', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: amountFlex, child: Text('Amount', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: dateFlex, child: Text('Date', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: depositorFlex, child: Text('Depositor', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: receiverFlex, child: Text('Receiver', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: isDebitFlex, child: Text('Is Debit', style: Theme.of(context).textTheme.headline6,)),
-          ],
-        ),
-        const Divider(height: 24.0, thickness: 1.0, color: Colors.black,),
-        for (var o in list)
-          Column(
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: nameFlex, child: Text(o.transactionName, style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: amountFlex, child: Text('IDR ${o.transaction_amount}', style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: dateFlex, child: Text(o.transaction_date.toIso8601String().split('T')[0], style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: depositorFlex, child: Text(o.transaction_depositor, style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: receiverFlex, child: Text(o.transaction_receiver, style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: isDebitFlex, child: Row(
-                    children: [
-                      Checkbox(value: o.is_debit, onChanged: null),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4.0),
-                        child: Text('${o.is_debit}', style: Theme.of(context).textTheme.bodyText2,),
-                      ),
-                    ],
-                  )),
-                ],
-              ),
-              const Divider(thickness: 1.0,),
-            ],
-          ),
-      ],
-    );
-  }*/
-
   Widget _listView(List<Transaction> list) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -405,7 +243,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(o.transaction_date.toIso8601String().split('T')[0], style: const TextStyle(
+                      Text(o.transaction_date.split('T')[0], style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12.0,
                       ),),
@@ -439,7 +277,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
                     fontSize: 14.0,
                   ),),
                   const SizedBox(height: 2.0,),
-                  Text('Receiver: '+o.transaction_receiver, style: TextStyle(
+                  if (!o.is_debit) Text('Receiver: '+o.transaction_receiver, style: TextStyle(
                     color: Colors.blue[800],
                     fontSize: 14.0,
                   ),),
@@ -456,6 +294,7 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
   @override
   void initState() {
     _scrollController = ScrollController();
+    _depositorCon = TextEditingController(text: widget.accountId?.substring(2) ?? '');
     super.initState();
   }
 
@@ -467,7 +306,16 @@ class _AdminTopupScreenState extends State<AdminTopupScreen> {
       children: [
         Card(child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text((widget.accountId != null) ? '${widget.accountId}\'s Transaction' : 'All Transaction', style: Theme.of(context).textTheme.headline3,),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text((widget.accountId != null) ? '${widget.accountId}\'s Transaction' : 'All Transaction', style: Theme.of(context).textTheme.headline3,),
+              if (widget.accountId != null) Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: Text('Total: IDR $_totalMoney', style: Theme.of(context).textTheme.subtitle1,),
+              ),
+            ],
+          ),
         )),
         Card(child: Padding(
           padding: const EdgeInsets.all(16.0),

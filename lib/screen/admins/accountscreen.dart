@@ -477,42 +477,55 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        Card(child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text('Account', style: Theme.of(context).textTheme.headline3,),
-        )),
-        Card(child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: _addOrUpdateView(),
-        )),
-        Card(
-          child: Padding(
+    return OrientationBuilder(
+        builder: (context, orientation) {
+          return ListView(
+            controller: _scrollController,
             padding: const EdgeInsets.all(16.0),
-            child: FutureBuilder<List<Account>>(
-              key: ValueKey(_rebuildListCount),
-              future: _getList(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return _listView(snapshot.data!);
-                }
-                else if (snapshot.hasError) {
-                  return Column(
-                    children: const [
-                      Text('Terjadi Kesalahan')
-                    ],
-                  );
-                }
+            children: [
+              Card(child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Account', style: Theme.of(context).textTheme.headline3,),
+              )),
+              Card(child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: _addOrUpdateView(),
+              )),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: FutureBuilder<List<Account>>(
+                    key: ValueKey(_rebuildListCount),
+                    future: _getList(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        if (orientation == Orientation.portrait) {
+                          return SizedBox.fromSize(
+                            size: MediaQuery.of(context).size,
+                            child: Center(
+                              child: Text('Rotate to landscape to see data.', style: Theme.of(context).textTheme.headline6, textAlign: TextAlign.center,),
+                            ),
+                          );
+                        } else {
+                          return _listView(snapshot.data!);
+                        }
+                      }
+                      else if (snapshot.hasError) {
+                        return Column(
+                          children: const [
+                            Text('Terjadi Kesalahan')
+                          ],
+                        );
+                      }
 
-                return const Center(child: CircularProgressIndicator());
-              }
-            ),
-          ),
-        ),
-      ],
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  ),
+                ),
+              ),
+            ],
+          );
+      }
     );
   }
 }

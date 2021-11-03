@@ -4,7 +4,7 @@ class Transaction {
   bool is_debit;
   String transactionName;
   int transaction_amount;
-  DateTime transaction_date;
+  String transaction_date;
   String transaction_depositor;
   String transaction_receiver;
 
@@ -18,6 +18,6 @@ class Transaction {
       this.transaction_receiver);
 
   static Transaction parse(dynamic e) => Transaction(e['id'], e['is_debit'],
-      e['TransactionName'], e['transaction_amount'], DateTime.parse(e['transaction_date']),
+      e['TransactionName'], e['transaction_amount'], e['transaction_date'],
       e['transaction_depositor'], e['transaction_receiver']);
 }

@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
 
   static const myMaterialColor = MaterialColor(
     0xFF0887CC,
-    <int, Color>{
+    <int, Color> {
       50: Color(0xFFA4CDEB),
       100: Color(0xff91c8ed),
       200: Color(0xFF07AEE6),
