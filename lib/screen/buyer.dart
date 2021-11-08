@@ -27,27 +27,9 @@ class _BuyerPageState extends State<BuyerPage> {
     const BuyerScreen(), const TopupScreen(),
   ];
 
-  late Future<Account?> _account;
+  late final Future<Account?> _account;
   void _load() async {
-    _account = Account.getAccount();
-    String phone = (await _account)!.mobile;
-    await Temp.fillTransactionData(phone);
-
-    if (Temp.transactionList != null) {
-      setState(() {
-        _isLoaded = true;
-      });
-    }
-  }
-
-  void reload() async {
-    setState(() {
-      _isLoaded = false;
-    });
-
-    Temp.deleteTransactionData();
-    String phone = (await _account)!.mobile;
-    await Temp.fillTransactionData(phone);
+    await Temp.fillTransactionData();
 
     if (Temp.transactionList != null) {
       setState(() {
@@ -58,6 +40,7 @@ class _BuyerPageState extends State<BuyerPage> {
 
   @override
   void initState() {
+    _account = Account.getAccount();
     _load();
     super.initState();
   }
@@ -167,8 +150,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
             children: [
               Text('Are you sure you want to make a transaction with:\n'
                   'Name: $name \n'
-                  'User: $phone \n'
-                  'Amount: $amount'),
+                  'Amount: ${EnVar.MoneyFormat(int.parse(amount))}'),
               if (!canPay) const Padding(
                 padding: EdgeInsets.only(top: 6.0),
                 child: Text('Not enough money to make this transaction!', style: TextStyle(color: Colors.red),),
@@ -191,7 +173,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
           ],
         )));
         if (isSuccess != null && isSuccess) {
-          _doPayment(name, phone, amount);
+          _doPayment(phone, amount);
         }
         setState(() {
           _dialogShowing = false;
@@ -220,7 +202,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
 
   bool _dialogShowing = false;
 
-  Future<void> _doPayment(String name, String phone, String amount, [int retryCount=0]) async {
+  Future<void> _doPayment(String phone, String amount, [int retryCount=0]) async {
     try {
       if (retryCount != 3) {
         if (retryCount == 0) {
@@ -249,7 +231,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
           headers: EnVar.HTTP_HEADERS(),
           body: jsonEncode({
             "is_debit": false,
-            "TransactionName": name,
+            "TransactionName": '-',
             "transaction_amount": parsedAmount,
             "transaction_date": date.toIso8601String().split('T')[0],
             "transaction_depositor": myPhone,
@@ -262,8 +244,6 @@ class _BuyerScreenState extends State<BuyerScreen> {
         if (response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Success')));
-
-          _pageState.currentState!.reload();
         }
         else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -275,7 +255,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
             const SnackBar(content: Text('Failed after 3 retry.')));
       }
 
-    } on TimeoutException {_doPayment(name, phone, amount, ++retryCount);}
+    } on TimeoutException {_doPayment(phone, amount, ++retryCount);}
   }
 
   @override

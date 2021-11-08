@@ -1,7 +1,5 @@
 
-import 'dart:async';
-import 'dart:convert';
-
+import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/objects/transaction.dart';
 import 'package:flutter/material.dart';
@@ -19,55 +17,6 @@ class _TopupScreenState extends State<TopupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        /*Row(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: nameFlex, child: Text('Name', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: amountFlex, child: Text('Amount', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: dateFlex, child: Text('Date', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: depositorFlex, child: Text('Depositor', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: receiverFlex, child: Text('Receiver', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: isDebitFlex, child: Text('Is Debit', style: Theme.of(context).textTheme.headline6,)),
-          ],
-        ),
-        const Divider(height: 24.0, thickness: 1.0, color: Colors.black,),
-        for (var o in list)
-          Column(
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: nameFlex, child: Text(o.transactionName, style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: amountFlex, child: Text('IDR ${o.transaction_amount}', style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: dateFlex, child: Text(o.transaction_date.toIso8601String().split('T')[0], style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: depositorFlex, child: Text(o.transaction_depositor, style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: receiverFlex, child: Text(o.transaction_receiver, style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: isDebitFlex, child: Row(
-                    children: [
-                      Checkbox(value: o.is_debit, onChanged: null),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4.0),
-                        child: Text('${o.is_debit}', style: Theme.of(context).textTheme.bodyText2,),
-                      ),
-                    ],
-                  )),
-                ],
-              ),
-              const Divider(thickness: 1.0,),
-            ],
-          ),*/
         for (var o in list)
           Card(
             child: Padding(
@@ -75,33 +24,93 @@ class _TopupScreenState extends State<TopupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(o.transaction_date.split('T')[0], style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12.0,
-                  ),),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(o.transaction_date.split('T')[0], style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12.0,
+                      ),),
+                      Text(o.is_debit ? 'Debit' : 'Kredit', style: TextStyle(
+                        color: o.is_debit ? Colors.blue : Colors.deepOrange,
+                        fontSize: 12.0,
+                      ),),
+                    ],
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(o.transactionName, style: const TextStyle(
+                        Text('No. Nota: ${o.id}', style: const TextStyle(
                           color: Colors.black,
                           fontSize: 18.0,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                         ),),
-                        const SizedBox(height: 4.0,),
-                        Text('IDR ${o.transaction_amount}', style: const TextStyle(
-                          color: Colors.black,
+                        const SizedBox(height: 6.0,),
+                        Text(EnVar.MoneyFormat(o.transaction_amount), style: TextStyle(
+                          color: (o.is_debit) ? Colors.blue : Colors.deepOrange,
                           fontSize: 16.0,
                           fontWeight: FontWeight.w500,
                         ),),
                       ],
                     ),
                   ),
-                  Text(o.transaction_receiver, style: const TextStyle(
-                    color: Colors.deepOrange,
-                    fontSize: 14.0,
-                  ),),
+                  ExpansionTile(
+                    title: const Text('Depositor'),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0).copyWith(bottom: 0.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.person),
+                            const SizedBox(width: 4.0,),
+                            Text(o.depositor.name)
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.phone),
+                            const SizedBox(width: 4.0,),
+                            Text(o.depositor.mobile)
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  ExpansionTile(
+                    title: const Text('Receiver'),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0).copyWith(bottom: 0.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.person),
+                            const SizedBox(width: 4.0,),
+                            Text(o.receiver.name)
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.phone),
+                            const SizedBox(width: 4.0,),
+                            Text(o.receiver.mobile)
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -110,42 +119,106 @@ class _TopupScreenState extends State<TopupScreen> {
     );
   }
 
-  late ScrollController _scrollController;
-
-  @override
-  void initState() {
-    _scrollController = ScrollController();
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        Card(child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+    return RefreshIndicator(
+      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+      onRefresh: () async {
+        await Temp.fillTransactionData();
+        setState(() {});
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          Card(child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('Transactions', style: Theme.of(context).textTheme.headline3, textAlign: TextAlign.center,),
+                    const SizedBox(height: 16.0,),
+                    if (Temp.withdrawTotal == null) Text('Current wallet: ${EnVar.MoneyFormat(Temp.total!)}', style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14.0,
+                      //fontWeight: FontWeight.w500,
+                    ),),
+                    if (Temp.withdrawTotal != null) Text('Amount received: ${EnVar.MoneyFormat(Temp.total!)}', style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14.0,
+                      //fontWeight: FontWeight.w500,
+                    ),),
+                    if (Temp.withdrawTotal != null) Text('Total withdrawn: ${EnVar.MoneyFormat(Temp.withdrawTotal!)}', style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14.0,
+                      //fontWeight: FontWeight.w500,
+                    ),),
+                    if (Temp.withdrawTotal != null) Text('Current wallet: ${EnVar.MoneyFormat(Temp.total! - Temp.withdrawTotal!)}', style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14.0,
+                      //fontWeight: FontWeight.w500,
+                    ),),
+                  ],
+                ),
+              ),
+              Container(color: Colors.blue, height: 6.0,),
+            ],
+          )),
+          _listView(Temp.transactionList!),
+          if (Temp.withdrawTotal != null) Card(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text('Withdraws', style: Theme.of(context).textTheme.headline3,),
+                ),
+                Container(color: Colors.red, height: 6.0,),
+              ],
+            ),
+          ),
+          if (Temp.withdrawTotal != null) for (var o in Temp.withdrawList!) Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Transactions', style: Theme.of(context).textTheme.headline3, textAlign: TextAlign.center,),
-                  const SizedBox(height: 16.0,),
-                  Text('My Wallet: IDR ${Temp.total!}', style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14.0,
-                    //fontWeight: FontWeight.w500,
-                  ),),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(o.seller_id, style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12.0,
+                      ),),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(o.seller.name, style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w600,
+                        ),),
+                        const SizedBox(height: 6.0,),
+                        Text(EnVar.MoneyFormat(o.amount), style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w500,
+                        ),),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            Container(color: Colors.blue, height: 6.0,),
-          ],
-        )),
-        _listView(Temp.transactionList!),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

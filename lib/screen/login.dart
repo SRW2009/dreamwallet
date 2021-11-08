@@ -107,14 +107,14 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     if (_phoneController.text == '66630114604') {
-      Account account = Account('6266630114604', 'Admin', Admin(), true);
+      Account account = Account(
+          '6266630114604', 'Admin', Admin(), true
+      );
       await Account.setAccount(account);
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AdminPage()),
       );
-
       return;
     }
 

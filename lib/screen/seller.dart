@@ -23,11 +23,9 @@ class _SellerPageState extends State<SellerPage> {
     const SellerScreen(), const TopupScreen(),
   ];
 
-  late Future<Account?> _account;
+  late final Future<Account?> _account;
   void _load() async {
-    _account = Account.getAccount();
-    String phone = (await _account)!.mobile;
-    await Temp.fillTransactionData(phone);
+    await Temp.fillTransactionData();
 
     if (Temp.transactionList != null) {
       setState(() {
@@ -38,6 +36,7 @@ class _SellerPageState extends State<SellerPage> {
 
   @override
   void initState() {
+    _account = Account.getAccount();
     _load();
     super.initState();
   }
@@ -122,7 +121,6 @@ class SellerScreen extends StatefulWidget {
 
 class _SellerScreenState extends State<SellerScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameCon = TextEditingController();
   final _amountCon = TextEditingController();
 
   String? _qrData;
@@ -172,28 +170,6 @@ class _SellerScreenState extends State<SellerScreen> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextFormField(
-                      controller: _nameCon,
-                      keyboardType: TextInputType.name,
-                      decoration:
-                      MyInputDecoration.primaryInputDecoration(context)
-                          .copyWith(
-                        labelText: 'Transaction Name',
-                        prefixIcon: const Icon(Icons.edit),
-                      ),
-                      validator: (val) {
-                        if (val == null || val.isEmpty) {
-                          return 'Please fill this field';
-                        }
-                        if (val.contains(';') || val.contains(':')) {
-                          return 'Name can\'t contain one of the two forbidden symbols: \';\' or \':\'';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextFormField(
                       controller: _amountCon,
                       keyboardType: TextInputType.number,
                       maxLength: 14,
@@ -219,11 +195,11 @@ class _SellerScreenState extends State<SellerScreen> {
                       child: const Text('Generate QR'),
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          String name = _nameCon.text;
                           String amount = _amountCon.text;
 
                           Account? account = await Account.getAccount();
                           if (account == null) return;
+                          String name = account.name;
                           String phone = account.mobile;
 
                           try {

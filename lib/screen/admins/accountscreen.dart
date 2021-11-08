@@ -4,14 +4,16 @@ import 'dart:convert';
 
 import 'package:dreamwallet/objects/account.dart';
 import 'package:dreamwallet/objects/envar.dart';
+import 'package:dreamwallet/screen/admins/withdrawscreen.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AdminAccountScreen extends StatefulWidget {
-  final void Function(String accountId) openTransactionWithAccountId;
+  final void Function(Account account) openTransactionWithAccount;
+  final void Function(Account account) openWithdrawWithAccount;
 
-  const AdminAccountScreen(this.openTransactionWithAccountId, {Key? key}) : super(key: key);
+  const AdminAccountScreen(this.openTransactionWithAccount, this.openWithdrawWithAccount, {Key? key}) : super(key: key);
 
   @override
   _AdminAccountScreenState createState() => _AdminAccountScreenState();
@@ -20,6 +22,7 @@ class AdminAccountScreen extends StatefulWidget {
 class _AdminAccountScreenState extends State<AdminAccountScreen> {
 
   int _rebuildListCount = 0;
+  late Future<List<Account>> _list;
   final _formKey = GlobalKey<FormState>();
   String? _updateId;
   final _nameCon = TextEditingController();
@@ -54,6 +57,7 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
               const SnackBar(content: Text('Success')));
 
           setState(() {
+            _list = _getList();
             _rebuildListCount++;
           });
         }
@@ -121,6 +125,7 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
             _mobileCon.text = '';
             _statusCon = 0;
 
+            _list = _getList();
             _rebuildListCount++;
           });
         }
@@ -161,6 +166,7 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
               const SnackBar(content: Text('Success')));
 
           setState(() {
+            _list = _getList();
             _rebuildListCount++;
           });
         }
@@ -225,6 +231,7 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
             controller: _mobileCon,
             decoration: const InputDecoration(
               labelText: 'Mobile',
+              prefixText: '+62 ',
             ),
             validator: (e) {
               if (e == null || e.isEmpty) return 'Please fill the field.';
@@ -357,121 +364,12 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
     );
   }
 
-  Widget _listView(List<Account> list) {
-    int nameFlex = 1;
-    int mobileFlex = 1;
-    int statusFlex = 1;
-    int isActiveFlex = 1;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: nameFlex, child: Text('Name', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: mobileFlex, child: Text('Mobile', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: statusFlex, child: Text('Status', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            Expanded(flex: isActiveFlex, child: Text('Active', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            SizedBox(width: 110.0, child: Text('Transaction', style: Theme.of(context).textTheme.headline6,)),
-            const SizedBox(width: 8.0,),
-            SizedBox(width: 80.0, child: Text('Action', style: Theme.of(context).textTheme.headline6,)),
-          ],
-        ),
-        const Divider(height: 24.0, thickness: 1.0, color: Colors.black,),
-        for (var o in list)
-          Column(
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: nameFlex, child: Text(o.name, style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: mobileFlex, child: Text(o.mobile, style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: statusFlex, child: Text(o.status.toString(), style: Theme.of(context).textTheme.bodyText2,)),
-                  const SizedBox(width: 8.0,),
-                  Expanded(flex: isActiveFlex, child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Checkbox(value: o.isActive, onChanged: (o.isActive) ? null : (val) {
-                        Account account = Account(o.mobile, o.name, o.status, !o.isActive);
-                        _update(0, account);
-                      }),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4.0),
-                        child: Text(o.isActive ? 'Active' : 'Not Active', style: Theme.of(context).textTheme.bodyText2,),
-                      ),
-                    ],
-                  )),
-                  const SizedBox(width: 8.0,),
-                  SizedBox(width: 110.0, child: TextButton(
-                    style: MyButtonStyle.primaryTextButtonStyle(context),
-                    child: const Text('SHOW'),
-                    onPressed: () {
-                      widget.openTransactionWithAccountId(o.mobile);
-                    },
-                  ),),
-                  const SizedBox(width: 8.0,),
-                  SizedBox(
-                    width: 80.0,
-                    child: Column(
-                      children: [
-                        TextButton(
-                          style: MyButtonStyle.primaryTextButtonStyle(context),
-                          child: const Text('UPDATE'),
-                          onPressed: () {
-                            setState(() {
-                              _updateId = o.mobile;
-                              _nameCon.text = o.name;
-                              _mobileCon.text = o.mobile;
-                              _statusCon = o.status.toInt();
-                            });
-
-                            _scrollController.jumpTo(0.0);
-                          },
-                        ),
-                        TextButton(
-                          style: MyButtonStyle.primaryTextButtonStyle(context),
-                          child: const Text('DELETE'),
-                          onPressed: () async {
-                            final isDelete = await Navigator.push<bool>(context,
-                                DialogRoute(context: context, builder: (c) => AlertDialog(
-                                  content: Text('Delete ID: ${o.mobile} ?'),
-                                  actions: [
-                                    TextButton(onPressed: () {return Navigator.pop(c, false);}, child: const Text('No')),
-                                    TextButton(onPressed: () {return Navigator.pop(c, true);}, child: const Text('Yes')),
-                                  ],
-                                )));
-
-                            if (isDelete != null && isDelete) {
-                              _delete(o.mobile);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(thickness: 1.0,),
-            ],
-          ),
-      ],
-    );
-  }
-
   late ScrollController _scrollController;
 
   @override
   void initState() {
     _scrollController = ScrollController();
+    _list = _getList();
     super.initState();
   }
 
@@ -496,7 +394,7 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: FutureBuilder<List<Account>>(
                     key: ValueKey(_rebuildListCount),
-                    future: _getList(),
+                    future: _list,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         if (orientation == Orientation.portrait) {
@@ -507,7 +405,23 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
                             ),
                           );
                         } else {
-                          return _listView(snapshot.data!);
+                          return _ListView(
+                            snapshot.data!,
+                            onUpdate: _update,
+                            onPressUpdate: (o) {
+                              setState(() {
+                                _updateId = o.mobile;
+                                _nameCon.text = o.name;
+                                _mobileCon.text = o.mobile;
+                                _statusCon = o.status.toInt();
+                              });
+
+                              _scrollController.jumpTo(0.0);
+                            },
+                            onDelete: _delete,
+                            onPressTransactions: widget.openTransactionWithAccount,
+                            onPressWithdraws: widget.openWithdrawWithAccount
+                          );
                         }
                       }
                       else if (snapshot.hasError) {
@@ -526,6 +440,359 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
             ],
           );
       }
+    );
+  }
+}
+
+class _ListView extends StatefulWidget {
+  final List<Account> list;
+  final Future<void> Function([int retryCount, Account? account]) onUpdate;
+  final void Function(Account o) onPressUpdate;
+  final Future<void> Function(String id, [int retryCount]) onDelete;
+  final void Function(Account account) onPressTransactions;
+  final void Function(Account account) onPressWithdraws;
+
+  const _ListView(this.list, {Key? key,
+    required this.onUpdate, required this.onPressUpdate, required this.onDelete,
+    required this.onPressTransactions, required this.onPressWithdraws,
+  }) : super(key: key);
+
+  @override
+  _ListViewState createState() => _ListViewState();
+}
+
+class _ListViewState extends State<_ListView> {
+  int _filterCount = 0;
+
+  static const STATUS_ALL = 0;
+  static const STATUS_BUYER = 1;
+  static const STATUS_SELLER = 2;
+  static const STATUS_ADMIN = 3;
+
+  static const ACTIVE_ALL = 0;
+  static const ACTIVE_ACTIVATED = 1;
+  static const ACTIVE_NOTACTIVATED = 2;
+
+  String query = '';
+  late List<Account> _filteredList;
+
+  final int nameFlex = 1;
+  final int mobileFlex = 1;
+  final int statusFlex = 1;
+  final int isActiveFlex = 1;
+
+  int statusGroup = 0;
+  int activeGroup = 0;
+
+  void filter() {
+    _filteredList = widget.list;
+    // filter query
+    _filteredList = _filteredList.where((element) => element.name.toLowerCase().contains(query.toLowerCase())).toList();
+    // filter status
+    switch (statusGroup) {
+      case STATUS_BUYER:
+        _filteredList = _filteredList.where((element) => element.status is Buyer).toList();
+        break;
+      case STATUS_SELLER:
+        _filteredList = _filteredList.where((element) => element.status is Seller).toList();
+        break;
+      case STATUS_ADMIN:
+        _filteredList = _filteredList.where((element) => element.status is Admin).toList();
+        break;
+      default:
+        break;
+    }
+    // filter activated
+    switch (activeGroup) {
+      case ACTIVE_ACTIVATED:
+        _filteredList = _filteredList.where((element) => element.isActive).toList();
+        break;
+      case ACTIVE_NOTACTIVATED:
+        _filteredList = _filteredList.where((element) => !element.isActive).toList();
+        break;
+      default:
+        break;
+    }
+
+    setState(() {
+      _filterCount++;
+    });
+  }
+
+  @override
+  void initState() {
+    _filteredList = widget.list;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Search...',
+                ),
+                onSubmitted: (val) {
+                  query = val;
+                  filter();
+                },
+              ),
+              const SizedBox(height: 16.0,),
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Radio<int>(
+                            value: STATUS_ALL,
+                            groupValue: statusGroup,
+                            onChanged: (val) {
+                              if (val != null && statusGroup != val) {
+                                statusGroup = STATUS_ALL;
+                                filter();
+                              }
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text('Show all', style: Theme.of(context).textTheme.caption,),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Radio<int>(
+                            value: STATUS_BUYER,
+                            groupValue: statusGroup,
+                            onChanged: (val) {
+                              if (val != null && statusGroup != val) {
+                                statusGroup = STATUS_BUYER;
+                                filter();
+                              }
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text('Show buyer only', style: Theme.of(context).textTheme.caption,),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Radio<int>(
+                            value: STATUS_SELLER,
+                            groupValue: statusGroup,
+                            onChanged: (val) {
+                              if (val != null && statusGroup != val) {
+                                statusGroup = STATUS_SELLER;
+                                filter();
+                              }
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text('Show seller only', style: Theme.of(context).textTheme.caption,),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Radio<int>(
+                            value: STATUS_ADMIN,
+                            groupValue: statusGroup,
+                            onChanged: (val) {
+                              if (val != null && statusGroup != val) {
+                                statusGroup = STATUS_ADMIN;
+                                filter();
+                              }
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text('Show admin only', style: Theme.of(context).textTheme.caption,),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 20.0,),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Radio<int>(
+                            value: ACTIVE_ALL,
+                            groupValue: activeGroup,
+                            onChanged: (val) {
+                              if (val != null && activeGroup != val) {
+                                activeGroup = ACTIVE_ALL;
+                                filter();
+                              }
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text('Show all', style: Theme.of(context).textTheme.caption,),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Radio<int>(
+                            value: ACTIVE_ACTIVATED,
+                            groupValue: activeGroup,
+                            onChanged: (val) {
+                              if (val != null && activeGroup != val) {
+                                activeGroup = ACTIVE_ACTIVATED;
+                                filter();
+                              }
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text('Show activated account only', style: Theme.of(context).textTheme.caption,),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Radio<int>(
+                            value: ACTIVE_NOTACTIVATED,
+                            groupValue: activeGroup,
+                            onChanged: (val) {
+                              if (val != null && activeGroup != val) {
+                                activeGroup = ACTIVE_NOTACTIVATED;
+                                filter();
+                              }
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text('Show unactivated account only', style: Theme.of(context).textTheme.caption,),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: nameFlex, child: Text('Name', style: Theme.of(context).textTheme.headline6,)),
+            const SizedBox(width: 8.0,),
+            Expanded(flex: mobileFlex, child: Text('Mobile', style: Theme.of(context).textTheme.headline6,)),
+            const SizedBox(width: 8.0,),
+            Expanded(flex: statusFlex, child: Text('Status', style: Theme.of(context).textTheme.headline6,)),
+            const SizedBox(width: 8.0,),
+            Expanded(flex: isActiveFlex, child: Text('Active', style: Theme.of(context).textTheme.headline6,)),
+            const SizedBox(width: 8.0,),
+            SizedBox(width: 140.0, child: Text('Action', style: Theme.of(context).textTheme.headline6,)),
+          ],
+        ),
+        const Divider(height: 24.0, thickness: 1.0, color: Colors.black,),
+        ListView.builder(
+          key: ValueKey(_filterCount),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _filteredList.length,
+          itemBuilder: (context, i) {
+            final o = _filteredList[i];
+            return Column(
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: nameFlex, child: Text(o.name, style: Theme.of(context).textTheme.bodyText2,)),
+                    const SizedBox(width: 8.0,),
+                    Expanded(flex: mobileFlex, child: Text(o.mobile, style: Theme.of(context).textTheme.bodyText2,)),
+                    const SizedBox(width: 8.0,),
+                    Expanded(flex: statusFlex, child: Text(o.status.toString(), style: Theme.of(context).textTheme.bodyText2,)),
+                    const SizedBox(width: 8.0,),
+                    Expanded(flex: isActiveFlex, child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Checkbox(value: o.isActive, onChanged: (o.isActive) ? null : (val) {
+                          Account account = Account(o.mobile, o.name, o.status, !o.isActive);
+                          widget.onUpdate(0, account);
+                        }),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Text(o.isActive ? 'Active' : 'Not Active', style: Theme.of(context).textTheme.bodyText2,),
+                        ),
+                      ],
+                    )),
+                    const SizedBox(width: 8.0,),
+                    SizedBox(
+                      width: 140.0,
+                      child: Column(
+                        children: [
+                          TextButton(
+                            style: MyButtonStyle.primaryTextButtonStyle(context),
+                            child: const Text('UPDATE'),
+                            onPressed: () => widget.onPressUpdate(o),
+                          ),
+                          TextButton(
+                            style: MyButtonStyle.primaryTextButtonStyle(context),
+                            child: const Text('DELETE'),
+                            onPressed: () async {
+                              final isDelete = await Navigator.push<bool>(context,
+                                  DialogRoute(context: context, builder: (c) => AlertDialog(
+                                    content: Text('Delete ID: ${o.mobile} ?'),
+                                    actions: [
+                                      TextButton(onPressed: () {return Navigator.pop(c, false);}, child: const Text('No')),
+                                      TextButton(onPressed: () {return Navigator.pop(c, true);}, child: const Text('Yes')),
+                                    ],
+                                  )));
+
+                              if (isDelete != null && isDelete) {
+                                widget.onDelete(o.mobile);
+                              }
+                            },
+                          ),
+                          if (o.status is! Admin) TextButton(
+                            style: MyButtonStyle.primaryTextButtonStyle(context),
+                            child: const Text('TRANSACTIONS'),
+                            onPressed: () {
+                              widget.onPressTransactions(o);
+                            },
+                          ),
+                          if (o.status is Seller) TextButton(
+                            style: MyButtonStyle.primaryTextButtonStyle(context),
+                            child: const Text('WITHDRAWS'),
+                            onPressed: () {
+                              widget.onPressWithdraws(o);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(thickness: 1.0,),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 }
