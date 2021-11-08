@@ -27,10 +27,11 @@ class _Report {
   int accountCredit;
   int accountDebit;
   int accountSum;
-  List<Transaction>? accountTransactions;
+  int? accountTopup;
+  List<Transaction> accountTransactions;
 
   _Report(this.accountName, this.accountMobile, this.accountStatus,
-      this.accountCredit, this.accountDebit, this.accountSum);
+      this.accountCredit, this.accountDebit, this.accountSum, this.accountTransactions);
 }
 
 class AdminReportScreen extends StatefulWidget {
@@ -97,12 +98,8 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
           int totalCredit = data['credit'];
           int totalDebit = data['debit'];
 
-          List<Transaction>? list;
-          if (account.status is Seller) {
-            list = (data['record'] as List).map<Transaction>((e) => Transaction.parse(e)).toList();
-          }
-
-          return _Report(account.name, account.mobile, account.status, totalCredit, totalDebit, totalMoney)..accountTransactions=list;
+          List<Transaction> list = (data['record'] as List).map<Transaction>((e) => Transaction.parse(e)).toList();
+          return _Report(account.name, account.mobile, account.status, totalCredit, totalDebit, totalMoney, list);
         }
 
         return _getAccountReport(account, ++retryCount);
@@ -144,11 +141,21 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
     final data = ['Dreampay Report\n'];
 
     data.add('\nBuyer:\n');
+    /// {'buyer1' : [transaction1, transaction2], }
+    final Map<String, List<Transaction>> preCreditTransactions = {};
     for (var o in _reports!.where((element) => element.accountStatus is Buyer).toList()) {
       data.add('- (${o.accountMobile}) ${o.accountName}:\n'
           '  Debit = ${EnVar.MoneyFormat(o.accountDebit)};\n'
           '  Credit = ${EnVar.MoneyFormat(o.accountCredit)};\n'
           '  Saldo = ${EnVar.MoneyFormat(o.accountSum)};\n\n');
+
+      // Pre-Credit Transactions
+      for (var transaction in o.accountTransactions) {
+        if (!transaction.is_debit) break;
+
+        preCreditTransactions[o.accountName] ??= [];
+        preCreditTransactions[o.accountName]!.add(transaction);
+      }
     }
 
     data.add('\nSeller:\n');
@@ -164,8 +171,8 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
           '  Saldo = ${EnVar.MoneyFormat(o.accountSum*-1)};\n\n');
 
       // Duplicate Transactions
-      for (var transaction in o.accountTransactions!) {
-        final duplicates = o.accountTransactions!.where(
+      for (var transaction in o.accountTransactions) {
+        final duplicates = o.accountTransactions.where(
                 (element) => element.depositor.mobile == transaction.depositor.mobile
                 && element.transaction_amount == transaction.transaction_amount
         ).toList();
@@ -180,13 +187,11 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
             possibleDuplicateTransactions[o.accountName]![transaction.depositor.name]!.add(duplicates);
           }
         }
-
       }
     }
 
     data.add('\nPossible Duplicate Transactions:\n');
     for (var o in possibleDuplicateTransactions.entries) {
-
       data.add('- ${o.key}:\n');
       for (var o1 in o.value.entries) {
         data.add('  - ${o1.key}:\n');
@@ -198,6 +203,19 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
           data.add('    ${i+1}. No. Note -> ${EnVar.getAllIdsAsString(ids)}: Amount = ${EnVar.MoneyFormat(o2[0].transaction_amount)};\n');
         }
       }
+      data.add('\n');
+    }
+
+    data.add('\nPre-Credit Transactions:\n');
+    for (var o in preCreditTransactions.entries) {
+      data.add('- ${o.key}:\n');
+
+      for (var i = 0; i < preCreditTransactions[o.key]!.length; ++i) {
+        var o1 = preCreditTransactions[o.key]![i];
+
+        data.add('  ${i+1}. No. Note -> ${o1.id}: Amount = ${EnVar.MoneyFormat(o1.transaction_amount)};\n');
+      }
+      data.add('\n');
     }
 
     if (foundation.kIsWeb) {
