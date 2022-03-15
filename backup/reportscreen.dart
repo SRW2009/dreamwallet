@@ -50,26 +50,24 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
   List<_Report>? _reports;
 
   Future<List<Account>> _getAccountList([int retryCount=0]) async {
-    try {
-      if (retryCount != 3) {
-        const url = '${EnVar.API_URL_HOME}/account';
-        final response = await http.get(
-          Uri.parse(url),
-          headers: EnVar.HTTP_HEADERS(),
-        );
+    if (retryCount != 3) {
+      const url = '${EnVar.API_URL_HOME}/account';
+      final response = await http.get(
+        Uri.parse(url),
+        headers: EnVar.HTTP_HEADERS(),
+      ).timeout(const Duration(seconds: 5));
 
-        if (response.statusCode == 200) {
-          final list = jsonDecode(response.body)['response'] as List;
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body)['response'] as List;
 
-          return list.map<Account>((e) => Account.parse(e)).toList();
-        }
-
-        return _getAccountList(++retryCount);
+        return list.map<Account>((e) => Account.parse(e)).toList();
       }
-      else {
-        throw Exception();
-      }
-    } on TimeoutException {return _getAccountList(++retryCount);}
+
+      return _getAccountList(++retryCount);
+    }
+    else {
+      throw TimeoutException('Timeout');
+    }
   }
 
   Future<_Report> _getAccountReport(Account account, [int retryCount=0]) async {
@@ -110,6 +108,15 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
     } on TimeoutException {return _getAccountReport(account, ++retryCount);}
   }
 
+  Stream<_LoadingValue> _getReports(List<Account> accounts) async* {
+    for (var i = 0; i < accounts.length; ++i) {
+      var account = accounts[i];
+      var report = await _getAccountReport(account);
+      _reports!.add(report);
+      yield _LoadingValue(i+1, accounts.length);
+    }
+  }
+
   Future _getReport() async {
     setState(() {
       _isLoading = true;
@@ -121,13 +128,12 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       _loadStep.value = 1;
       _accountsLoadProgress.value = _LoadingValue(0, accounts.length);
       _reports = [];
-      for (var i = 0; i < accounts.length; ++i) {
-        var account = accounts[i];
-        var report = await _getAccountReport(account);
-        _reports!.add(report);
-        _accountsLoadProgress.value = _LoadingValue(i+1, accounts.length);
+
+      var reports = _getReports(accounts);
+      await for (final value in reports) {
+        _accountsLoadProgress.value = value;
       }
-    } on TimeoutException {
+    } on Exception {
       timeout = true;
     }
 

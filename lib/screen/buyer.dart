@@ -7,7 +7,6 @@ import 'package:dreamwallet/objects/account.dart';
 import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/screen/topup.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:qr_code_scanner/qr_code_scanner.dart';
@@ -124,20 +123,22 @@ class BuyerScreen extends StatefulWidget {
 }
 
 class _BuyerScreenState extends State<BuyerScreen> {
-  final GlobalKey<_BuyerPageState> _pageState = GlobalKey();
+  static const _transactionDelay = 8; // in second
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   Barcode? result;
+  bool _stopDoTransaction = false;
+  bool _isLoadingTransaction = false;
+  int _currentTimer = 0;
 
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((result) async {
-      if (!_dialogShowing) {
-        setState(() {
-          _dialogShowing = true;
-        });
+      if (!_stopDoTransaction) {
+        String? resultText = result.code;
+        if (resultText == null) return;
 
-        String resultText = result.code;
+        _stopDoTransaction = true;
         String name = resultText.split(';')[0].split(':')[1];
         String phone = resultText.split(';')[1].split(':')[1];
         String amount = resultText.split(';')[2].split(':')[1];
@@ -161,6 +162,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
             TextButton(
               child: const Text('NO'),
               onPressed: () {
+                _stopDoTransaction = false;
                 Navigator.pop(c, false);
               },
             ),
@@ -173,11 +175,32 @@ class _BuyerScreenState extends State<BuyerScreen> {
           ],
         )));
         if (isSuccess != null && isSuccess) {
-          _doPayment(phone, amount);
+          setState(() {
+            _isLoadingTransaction = true;
+          });
+          await _doPayment(phone, amount);
+          setState(() {
+            _currentTimer = _transactionDelay;
+          });
+          Timer.periodic(
+            const Duration(seconds: 1),
+            (timer) {
+              if (_currentTimer == 1) {
+                setState(() {
+                  _currentTimer = 0;
+                  _isLoadingTransaction = false;
+                  _stopDoTransaction = false;
+                });
+                timer.cancel();
+                return;
+              }
+
+              setState(() {
+                _currentTimer--;
+              });
+            },
+          );
         }
-        setState(() {
-          _dialogShowing = false;
-        });
       }
     });
   }
@@ -200,15 +223,10 @@ class _BuyerScreenState extends State<BuyerScreen> {
     }
   }
 
-  bool _dialogShowing = false;
-
   Future<void> _doPayment(String phone, String amount, [int retryCount=0]) async {
     try {
       if (retryCount != 3) {
-        if (retryCount == 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Loading...')));
-        } else {
+        if (retryCount != 0) {
           ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Retrying...')));
         }
@@ -238,9 +256,6 @@ class _BuyerScreenState extends State<BuyerScreen> {
             "transaction_receiver": phone
           }),
         );
-
-        print(response.statusCode);
-        print(response.body);
         if (response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Success')));
@@ -254,8 +269,10 @@ class _BuyerScreenState extends State<BuyerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed after 3 retry.')));
       }
-
-    } on TimeoutException {_doPayment(phone, amount, ++retryCount);}
+    } on TimeoutException {
+      if (retryCount != 3) _doPayment(phone, amount, ++retryCount);
+      return;
+    }
   }
 
   @override
@@ -294,6 +311,33 @@ class _BuyerScreenState extends State<BuyerScreen> {
                         key: qrKey,
                         onQRViewCreated: _onQRViewCreated,
                         overlay: QrScannerOverlayShape(),
+                      ),
+                      if (_isLoadingTransaction) Container(
+                        color: Colors.black.withOpacity(0.2),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Center(
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    value: (_currentTimer == 0)
+                                        ? null
+                                        : _currentTimer/_transactionDelay,
+                                  ),
+                                ),
+                                if (_currentTimer != 0) Positioned.fill(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(24.0),
+                                    child: FittedBox(child: Text('$_currentTimer', style: const TextStyle(color: Colors.white),)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

@@ -2,7 +2,6 @@
 import 'package:dreamwallet/objects/account.dart';
 import 'package:dreamwallet/screen/admins/accountscreen.dart';
 import 'package:dreamwallet/screen/admins/homescreen.dart';
-import 'package:dreamwallet/screen/admins/reportscreen.dart';
 import 'package:dreamwallet/screen/admins/withdrawscreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +43,7 @@ class AdminPageState extends State<AdminPage>{
       AdminAccountScreen(_openTransactionWithAccount, _openWithdrawWithAccount),
       const AdminTransactionScreen(),
       const AdminWithdrawScreen(),
-      const AdminReportScreen(),
+      //const AdminReportScreen(),
     ]);
     super.initState();
   }
