@@ -1,5 +1,5 @@
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/screen/admins/accountscreen.dart';
 import 'package:dreamwallet/screen/admins/homescreen.dart';
 import 'package:dreamwallet/screen/admins/withdrawscreen.dart';

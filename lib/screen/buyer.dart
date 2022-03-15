@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/screen/topup.dart';

@@ -1,5 +1,5 @@
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/screen/topup.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';

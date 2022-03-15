@@ -2,12 +2,14 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
+import 'package:dreamwallet/objects/account/account_privilege.dart';
 import 'package:dreamwallet/objects/envar.dart';
-import 'package:dreamwallet/screen/admins/withdrawscreen.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
+import '../../objects/account/privileges/root.dart';
 
 class AdminAccountScreen extends StatefulWidget {
   final void Function(Account account) openTransactionWithAccount;

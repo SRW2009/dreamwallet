@@ -1,5 +1,5 @@
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
 
 class Withdraw {
   int id;

@@ -2,7 +2,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
+import 'package:dreamwallet/objects/account/account_privilege.dart';
+import 'package:dreamwallet/objects/account/privileges/root.dart';
 import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/screen/admin.dart';
 import 'package:dreamwallet/screen/buyer.dart';
@@ -32,6 +34,8 @@ class _LoginPageState extends State<LoginPage> {
 
   var _isLoading = false;
   var _isRegister = true;
+  var _isAdminActivated = false;
+  AccountPrivilege _loginRadioGroup = Buyer();
 
   var _errorMessage = '';
   var _isError = false;
@@ -106,15 +110,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
-    if (_phoneController.text == '66630114604') {
-      Account account = Account(
-          '6266630114604', 'Admin', Admin(), true
-      );
-      await Account.setAccount(account);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminPage()),
-      );
+    if (_phoneController.text == '69420') {
+      setState(() {
+        _phoneController.text = '';
+        _isAdminActivated = true;
+        _loginRadioGroup = Admin();
+      });
       return;
     }
 
@@ -165,6 +166,11 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const AdminPage()),
+        );
+      } else if (account.status is Cashier) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Container()),// TODO: const CashierPage()),
         );
       }
     }
@@ -243,13 +249,16 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
-      body: Container(
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 600),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           gradient: LinearGradient(
               colors: [
                 Colors.white,
-                MyApp.myMaterialColor.shade50,
+                (_isAdminActivated)
+                    ? Colors.red.shade300
+                    : MyApp.myMaterialColor.shade50,
               ],
               begin: Alignment.topLeft, end: Alignment.bottomRight
           ),
@@ -257,50 +266,8 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
-            if (_needVerification) MaterialBanner(
-              padding: MediaQuery.of(context).padding.copyWith(left: 16.0),
-              leading: CircleAvatar(child: const Icon(Icons.check, color: Colors.white,), backgroundColor: Theme.of(context).colorScheme.primary,),
-              content: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                child: Text(
-                  'Your account has been successfully registered, but still need to be verified. Please check your Whatsapp and click the link we sent to you to finish your registration.',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  style: MyButtonStyle.primaryTextButtonStyle(context),
-                  onPressed: () {
-                    setState(() {
-                      _needVerification = false;
-                    });
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-            if (_successRegister) MaterialBanner(
-              padding: MediaQuery.of(context).padding.copyWith(left: 16.0),
-              leading: CircleAvatar(child: const Icon(Icons.check, color: Colors.white,), backgroundColor: Theme.of(context).colorScheme.primary,),
-              content: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                child: Text(
-                  'Alright, please wait until your account is confirmed by admin.',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  style: MyButtonStyle.primaryTextButtonStyle(context),
-                  onPressed: () {
-                    setState(() {
-                      _successRegister = false;
-                    });
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
+            if (_needVerification) _needVerificationBanner(context),
+            if (_successRegister) _successRegisterBanner(context),
             Expanded(
               child: SingleChildScrollView(
                 child: ConstrainedBox(
@@ -361,6 +328,39 @@ class _LoginPageState extends State<LoginPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              AnimatedContainer(
+                                height: (_isRegister) ? 0.0 : 50.0,
+                                duration: const Duration(milliseconds: 300),
+                                child: SingleChildScrollView(
+                                  child: AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 300),
+                                    opacity: (_isRegister) ? 0.0 : 1.0,
+                                    child: Column(
+                                      children: [
+                                        const SizedBox(height: 12.0),
+                                        Row(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.only(right: 12.0),
+                                              child: Text(
+                                                'Login As',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                            _loginRadio(Buyer(), 'Guest'),
+                                            _loginRadio(Seller(), 'Merchant'),
+                                            _loginRadio(Cashier(), 'Cashier'),
+                                            if (_isAdminActivated) _loginRadio(Admin(), 'Admin'),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                               TextFormField(
                                 controller: _phoneController,
                                 keyboardType: TextInputType.phone,
@@ -379,7 +379,7 @@ class _LoginPageState extends State<LoginPage> {
                                 },
                               ),
                               AnimatedContainer(
-                                height: (_isRegister) ? 160.0 : 0.0,
+                                height: (_isRegister) ? 90.0 : 0.0,
                                 duration: const Duration(milliseconds: 300),
                                 child: SingleChildScrollView(
                                   child: AnimatedOpacity(
@@ -461,4 +461,69 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
+  MaterialBanner _needVerificationBanner(BuildContext context) => MaterialBanner(
+    padding: MediaQuery.of(context).padding.copyWith(left: 16.0),
+    leading: CircleAvatar(child: const Icon(Icons.check, color: Colors.white,), backgroundColor: Theme.of(context).colorScheme.primary,),
+    content: const Padding(
+      padding: EdgeInsets.symmetric(vertical: 12.0),
+      child: Text(
+        'Your account has been successfully registered, but still need to be verified. Please check your Whatsapp and click the link we sent to you to finish your registration.',
+        style: TextStyle(color: Colors.white),
+      ),
+    ),
+    actions: [
+      TextButton(
+        style: MyButtonStyle.primaryTextButtonStyle(context),
+        onPressed: () {
+          setState(() {
+            _needVerification = false;
+          });
+        },
+        child: const Text('OK'),
+      ),
+    ],
+  );
+
+  MaterialBanner _successRegisterBanner(BuildContext context) => MaterialBanner(
+    padding: MediaQuery.of(context).padding.copyWith(left: 16.0),
+    leading: CircleAvatar(child: const Icon(Icons.check, color: Colors.white,), backgroundColor: Theme.of(context).colorScheme.primary,),
+    content: const Padding(
+      padding: EdgeInsets.symmetric(vertical: 12.0),
+      child: Text(
+        'Alright, please wait until your account is confirmed by admin.',
+        style: TextStyle(color: Colors.white),
+      ),
+    ),
+    actions: [
+      TextButton(
+        style: MyButtonStyle.primaryTextButtonStyle(context),
+        onPressed: () {
+          setState(() {
+            _successRegister = false;
+          });
+        },
+        child: const Text('OK'),
+      ),
+    ],
+  );
+
+  Widget _loginRadio(AccountPrivilege value, String title) => Row(
+    children: [
+      Radio<AccountPrivilege>(
+        value: value,
+        groupValue: _loginRadioGroup,
+        onChanged: (val) {
+          if (val == null) return;
+          setState(() {
+            _loginRadioGroup = val;
+          });
+        },
+      ),
+      Padding(
+        padding: const EdgeInsets.only(left: 4.0, right: 10.0),
+        child: Text(title),
+      ),
+    ],
+  );
 }

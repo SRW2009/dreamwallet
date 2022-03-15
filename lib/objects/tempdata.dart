@@ -2,11 +2,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/transaction.dart';
 import 'package:dreamwallet/objects/withdraw.dart';
 import 'package:http/http.dart' as http;
 
+import 'account/privileges/root.dart';
 import 'envar.dart';
 
 class Temp {

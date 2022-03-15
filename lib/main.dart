@@ -1,9 +1,12 @@
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
+import 'package:dreamwallet/objects/account/account_privilege.dart';
 import 'package:dreamwallet/screen/admin.dart';
 import 'package:dreamwallet/screen/buyer.dart';
 import 'package:dreamwallet/screen/login.dart';
 import 'package:dreamwallet/screen/seller.dart';
 import 'package:flutter/material.dart';
+
+import 'objects/account/privileges/root.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,7 +39,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSwatch(primarySwatch: myMaterialColor)
             .copyWith(
           secondary: const Color.fromRGBO(217, 179, 67, 1.0),
-          secondaryVariant: const Color.fromRGBO(165, 137, 51, 1.0),
+          secondaryContainer: const Color.fromRGBO(165, 137, 51, 1.0),
           surface: const Color.fromRGBO(2, 62, 115, 1.0),
           background: const Color.fromRGBO(191, 186, 176, 1.0),
           error: const Color.fromRGBO(191, 44, 56, 1.0),
@@ -108,22 +111,34 @@ class HomePage extends StatelessWidget {
           context,
           MaterialPageRoute(builder: (context) => const AdminPage()),
         );
-      } else if (privilege is Buyer && account.isActive) {
+        return;
+      }
+      if (privilege is Buyer && account.isActive) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const BuyerPage()),
         );
-      } else if (privilege is Seller && account.isActive) {
+        return;
+      }
+      if (privilege is Seller && account.isActive) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const SellerPage()),
         );
-      } else {
+        return;
+      }
+      if (privilege is Cashier && account.isActive) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginPage(needVerification: true)),
+          MaterialPageRoute(builder: (context) => Container()),// TODO: const CashierPage()),
         );
+        return;
       }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage(needVerification: true)),
+      );
     }
     else {
       Navigator.pushReplacement(

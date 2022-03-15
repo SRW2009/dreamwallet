@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/withdraw.dart';
 import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';

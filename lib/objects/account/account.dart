@@ -1,61 +1,6 @@
 
+import 'package:dreamwallet/objects/account/account_privilege.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-class Admin extends AccountPrivilege {
-  @override
-  String toString() {
-    return 'Admin';
-  }
-
-  @override
-  int toInt() => 3;
-
-  @override
-  String toChar() => 'A';
-}
-class Buyer extends AccountPrivilege {
-  @override
-  String toString() {
-    return 'Buyer';
-  }
-
-  @override
-  int toInt() => 1;
-
-  @override
-  String toChar() => 'B';
-}
-class Seller extends AccountPrivilege {
-  @override
-  String toString() {
-    return 'Seller';
-  }
-
-  @override
-  int toInt() => 2;
-
-  @override
-  String toChar() => 'S';
-}
-
-abstract class AccountPrivilege {
-  int toInt();
-  String toChar();
-
-  static AccountPrivilege? parse(String a) {
-    if (a == 'A' || a == 'Admin') return Admin();
-    if (a == 'S' || a == 'Seller') return Seller();
-    if (a == 'B' || a == 'Buyer') return Buyer();
-    return null;
-  }
-
-  static AccountPrivilege? parseInt(int i) {
-    if (i == 3) return Admin();
-    if (i == 2) return Seller();
-    if (i == 1) return Buyer();
-    return null;
-  }
-}
 
 class Account {
   static const String _PREFS_LOGIN_MOBILE = 'prefs_login_mobile';

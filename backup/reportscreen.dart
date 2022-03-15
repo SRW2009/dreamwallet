@@ -2,7 +2,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dreamwallet/objects/account.dart';
+import 'package:dreamwallet/objects/account/account.dart';
+import 'package:dreamwallet/objects/account/account_privilege.dart';
+import 'package:dreamwallet/objects/account/privileges/root.dart';
 import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/objects/transaction.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
