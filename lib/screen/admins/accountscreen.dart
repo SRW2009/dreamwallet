@@ -90,12 +90,12 @@ class _AdminAccountScreenState extends State<AdminAccountScreen> {
         String url;
         http.Response response;
         if (account != null) {
-          url = '${EnVar.API_URL_HOME}/update/${account.mobile}';
+          url = '${EnVar.API_URL_HOME}/update/${account.id}';
           response = await http.post(
             Uri.parse(url),
             headers: EnVar.HTTP_HEADERS(),
             body: jsonEncode({
-              //"account_mobile": account.mobile,
+              "account_phone": account.mobile,
               "account_name": account.name,
               "account_status": account.status.toChar(),
               "is_active": account.isActive,
@@ -733,7 +733,7 @@ class _ListViewState extends State<_ListView> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Checkbox(value: o.isActive, onChanged: (o.isActive) ? null : (val) {
-                          Account account = Account(o.mobile, o.name, o.status, !o.isActive);
+                          Account account = Account(o.id, o.mobile, o.name, o.status, !o.isActive);
                           widget.onUpdate(0, account);
                         }),
                         Padding(

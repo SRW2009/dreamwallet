@@ -10,7 +10,9 @@ import 'account/privileges/root.dart';
 
 abstract class _R {
   Future<_LoginResponse> login(String phone, AccountPrivilege privilege);
-  Future<int> register(String phone, String name);
+
+  Future<int> clientRegister(String phone, String name);
+  Future<int> clientCreateTransaction(String phone, int amount);
 }
 
 class Request implements _R {
@@ -38,11 +40,12 @@ class Request implements _R {
       bool isActive = data['is_active'];
 
       if (isActive) {
+        int id = data['id'];
         String name = data['account_name'];
         String phone = data['account_mobile'];
         String status = data['account_status'];
         Account account = Account(
-            phone, name, AccountPrivilege.parse(status)!, isActive
+            id, phone, name, AccountPrivilege.parse(status)!, isActive
         );
         await Account.setAccount(account);
 
@@ -53,7 +56,7 @@ class Request implements _R {
   }
 
   @override
-  Future<int> register(String phone, String name) async {
+  Future<int> clientRegister(String phone, String name) async {
     final formPhone = '62'+phone;
     final response = await http.post(
       Uri.parse('${EnVar.API_URL_HOME}/register'),
@@ -61,13 +64,32 @@ class Request implements _R {
       body: jsonEncode({
         'account_mobile': formPhone,
         'account_name' : name,
-        'account_status': 'B',
       }),
     );
-    if (response.statusCode == 201) {
-      Account account = Account(formPhone, name, Buyer(), false);
+    /*if (response.statusCode == 201) {
+      Account account = Account(0, formPhone, name, Buyer(), false);
       await Account.setAccount(account);
-    }
+    }*/
+    return response.statusCode;
+  }
+
+  @override
+  Future<int> clientCreateTransaction(String phone, int amount) async {
+    DateTime date = DateTime.now();
+    Account? account = await Account.getAccount();
+    if (account == null) return 0;
+
+    final response = await http.post(
+      Uri.parse('${EnVar.API_URL_HOME}/transaction'),
+      headers: EnVar.HTTP_HEADERS(),
+      body: jsonEncode({
+        "is_debit": false,
+        "transaction_amount": amount,
+        "transaction_date": date.toIso8601String().split('T')[0],
+        "merchant_id": phone
+      }),
+    );
+
     return response.statusCode;
   }
 }

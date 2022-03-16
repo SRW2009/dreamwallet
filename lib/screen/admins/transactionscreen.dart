@@ -332,118 +332,120 @@ class _AdminTransactionScreenState extends State<AdminTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      controller: _scrollController,
+    return Padding(
       padding: const EdgeInsets.all(16.0),
-      children: [
-        Card(child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text((widget.account != null) ? '${widget.account!.name}\'s Transaction (${widget.account!.status.toString()})' : 'All Transaction', style: Theme.of(context).textTheme.headline3,),
-              if (widget.account != null && widget.account!.status is Buyer) Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Debit: ${EnVar.moneyFormat(_totalDebit)}', style: Theme.of(context).textTheme.subtitle1,),
-                    Text('Kredit: ${EnVar.moneyFormat(_totalCredit)}', style: Theme.of(context).textTheme.subtitle1,),
-                    Text('Total: ${EnVar.moneyFormat(_totalMoney)}', style: Theme.of(context).textTheme.subtitle1,),
-                  ],
-                ),
-              ),
-              if (widget.account != null && widget.account!.status is Seller) Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text('Total uang: ${EnVar.moneyFormat(_totalMoney)}', style: Theme.of(context).textTheme.subtitle1,),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        )),
-        Card(child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: _addOrUpdateView(),
-        )),
-        FutureBuilder<List<Transaction>>(
-            key: ValueKey(_rebuildListCount),
-            future: _futureList,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return _ListView(
-                  snapshot.data!.reversed.toList(),
-                  deleteAll: _deleteAll,
-                );
-              }
-              else if (snapshot.hasError) {
-                print(snapshot.error);
-                return Column(
-                  children: const [
-                    Text('Terjadi Kesalahan')
-                  ],
-                );
-              }
-
-              return const Center(child: CircularProgressIndicator());
-            }
-        ),
-        if (_withdrawList != null) Card(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text('Withdraws', style: Theme.of(context).textTheme.headline3,),
-              ),
-              Container(color: Colors.red, height: 6.0,),
-            ],
-          ),
-        ),
-        if (_withdrawList != null) for (var o in _withdrawList!) Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(o.seller_id, style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12.0,
-                    ),),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: FutureBuilder<List<Transaction>>(
+        key: ValueKey(_rebuildListCount),
+        future: _futureList,
+        builder: (context, snapshot) {
+          return CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverToBoxAdapter(
+                child: Card(child: Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(o.seller.name, style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w600,
-                      ),),
-                      const SizedBox(height: 6.0,),
-                      Text(EnVar.moneyFormat(o.amount), style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w500,
-                      ),),
+                      Text((widget.account != null) ? '${widget.account!.name}\'s Transaction (${widget.account!.status.toString()})' : 'All Transaction', style: Theme.of(context).textTheme.headline3,),
+                      if (widget.account != null && widget.account!.status is Buyer) Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Debit: ${EnVar.moneyFormat(_totalDebit)}', style: Theme.of(context).textTheme.subtitle1,),
+                            Text('Kredit: ${EnVar.moneyFormat(_totalCredit)}', style: Theme.of(context).textTheme.subtitle1,),
+                            Text('Total: ${EnVar.moneyFormat(_totalMoney)}', style: Theme.of(context).textTheme.subtitle1,),
+                          ],
+                        ),
+                      ),
+                      if (widget.account != null && widget.account!.status is Seller) Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text('Total uang: ${EnVar.moneyFormat(_totalMoney)}', style: Theme.of(context).textTheme.subtitle1,),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+              ),
+              SliverToBoxAdapter(
+                child: Card(child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: _addOrUpdateView(),
+                )),
+              ),
+              if (snapshot.hasData) _ListView(
+                snapshot.data!.reversed.toList(),
+                deleteAll: _deleteAll,
+              ),
+              if (snapshot.hasError) const SliverFillRemaining(
+                child: Center(
+                  child: Text('Terjadi Kesalahan'),
+                ),
+              ),
+              if (!snapshot.hasData && !snapshot.hasError) const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              if (_withdrawList != null) Card(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text('Withdraws', style: Theme.of(context).textTheme.headline3,),
+                    ),
+                    Container(color: Colors.red, height: 6.0,),
+                  ],
+                ),
+              ),
+              if (_withdrawList != null) for (var o in _withdrawList!) Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(o.seller_id, style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12.0,
+                          ),),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(o.seller.name, style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w600,
+                            ),),
+                            const SizedBox(height: 6.0,),
+                            Text(EnVar.moneyFormat(o.amount), style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w500,
+                            ),),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ],
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -483,8 +485,6 @@ class _ListViewState extends State<_ListView> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedList = _filteredList.where((element) => element.selected).toList();
-    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -511,8 +511,10 @@ class _ListViewState extends State<_ListView> {
                       style: MyButtonStyle.primaryElevatedButtonStyle(context),
                       icon: const Icon(Icons.delete),
                       label: const Text('Delete all selected'),
-                      onPressed: (_filteredList.isNotEmpty && selectedList.isNotEmpty) ? () async {
-                        final ids = selectedList.map<String>((e) => e.id.toString()).toList();
+                      onPressed: (_filteredList.isNotEmpty && _filteredList.any((element) => element.selected)) ? () async {
+                        final ids = _filteredList
+                            .where((element) => element.selected)
+                            .map<String>((e) => e.id.toString()).toList();
 
                         final isDelete = await Navigator.push<bool>(context,
                             DialogRoute(context: context, builder: (c) => AlertDialog(

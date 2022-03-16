@@ -97,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final statusCode = await Request().register(_phoneController.text, _nameController.text);
+    final statusCode = await Request().clientRegister(_phoneController.text, _nameController.text);
     if (statusCode == 201) {
       setState(() {
         _successRegister = true;

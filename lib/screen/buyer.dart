@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/envar.dart';
+import 'package:dreamwallet/objects/request.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/screen/topup.dart';
 import 'package:flutter/material.dart';
@@ -138,47 +139,18 @@ class _BuyerScreenState extends State<BuyerScreen> {
         String? resultText = result.code;
         if (resultText == null) return;
 
-        _stopDoTransaction = true;
         String name = resultText.split(';')[0].split(':')[1];
         String phone = resultText.split(';')[1].split(':')[1];
-        String amount = resultText.split(';')[2].split(':')[1];
+        int? amount = int.tryParse(resultText.split(';')[2].split(':')[1]);
+        if (amount == null) return;
 
-        final canPay = (Temp.total! - int.parse(amount)) >= 0;
-        final isSuccess = await Navigator.push<bool>(context, DialogRoute(context: context, builder: (c) => AlertDialog(
-          title: const Text('Attention'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Are you sure you want to make a transaction with:\n'
-                  'Name: $name \n'
-                  'Amount: ${EnVar.moneyFormat(int.parse(amount))}'),
-              if (!canPay) const Padding(
-                padding: EdgeInsets.only(top: 6.0),
-                child: Text('Not enough money to make this transaction!', style: TextStyle(color: Colors.red),),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text('NO'),
-              onPressed: () {
-                _stopDoTransaction = false;
-                Navigator.pop(c, false);
-              },
-            ),
-            TextButton(
-              child: const Text('YES'),
-              onPressed: canPay ? () {
-                Navigator.pop(c, true);
-              } : null,
-            ),
-          ],
-        )));
-        if (isSuccess != null && isSuccess) {
+        _stopDoTransaction = true;
+        final clientAgree = await _askAgreementOnTransaction(name, amount);
+        if (clientAgree) {
           setState(() {
             _isLoadingTransaction = true;
           });
-          await _doPayment(phone, amount);
+          await _doTransaction(phone, amount);
           setState(() {
             _currentTimer = _transactionDelay;
           });
@@ -189,8 +161,8 @@ class _BuyerScreenState extends State<BuyerScreen> {
                 setState(() {
                   _currentTimer = 0;
                   _isLoadingTransaction = false;
-                  _stopDoTransaction = false;
                 });
+                _stopDoTransaction = false;
                 timer.cancel();
                 return;
               }
@@ -223,56 +195,50 @@ class _BuyerScreenState extends State<BuyerScreen> {
     }
   }
 
-  Future<void> _doPayment(String phone, String amount, [int retryCount=0]) async {
-    try {
-      if (retryCount != 3) {
-        if (retryCount != 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Retrying...')));
-        }
+  Future<bool> _askAgreementOnTransaction(String name, int amount) async {
+    final canPay = (Temp.total! - amount) >= 0;
+    return await Navigator.push<bool>(context, DialogRoute(context: context, builder: (c) => AlertDialog(
+      title: const Text('Attention'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Are you sure you want to make a transaction with:\n'
+              'Name: $name \n'
+              'Amount: ${EnVar.moneyFormat(amount)}'),
+          if (!canPay) const Padding(
+            padding: EdgeInsets.only(top: 6.0),
+            child: Text('Not enough money to make this transaction!', style: TextStyle(color: Colors.red),),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          child: const Text('NO'),
+          onPressed: () {
+            _stopDoTransaction = false;
+            Navigator.pop(c, false);
+          },
+        ),
+        TextButton(
+          child: const Text('YES'),
+          onPressed: canPay ? () {
+            Navigator.pop(c, true);
+          } : null,
+        ),
+      ],
+    ))) ?? false;
+  }
 
-        DateTime date = DateTime.now();
-        Account? account = await Account.getAccount();
-        if (account == null) return;
-        String myPhone = account.mobile;
-        int parsedAmount;
-        try {
-          parsedAmount = int.parse(amount);
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to parse amount or date!')));
+  Future<void> _doTransaction(String phone, int amount) async {
+    final statusCode = await Request().clientCreateTransaction(phone, amount);
 
-          return;
-        }
-        final response = await http.post(
-          Uri.parse('${EnVar.API_URL_HOME}/transaction'),
-          headers: EnVar.HTTP_HEADERS(),
-          body: jsonEncode({
-            "is_debit": false,
-            "TransactionName": '-',
-            "transaction_amount": parsedAmount,
-            "transaction_date": date.toIso8601String().split('T')[0],
-            "transaction_depositor": myPhone,
-            "transaction_receiver": phone
-          }),
-        );
-        if (response.statusCode == 201) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Success')));
-        }
-        else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed')));
-        }
-      }
-      else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed after 3 retry.')));
-      }
-    } on TimeoutException {
-      if (retryCount != 3) _doPayment(phone, amount, ++retryCount);
+    if (statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Success')));
       return;
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed')));
   }
 
   @override
