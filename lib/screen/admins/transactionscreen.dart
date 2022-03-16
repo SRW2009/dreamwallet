@@ -348,9 +348,9 @@ class _AdminTransactionScreenState extends State<AdminTransactionScreen> {
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Debit: ${EnVar.MoneyFormat(_totalDebit)}', style: Theme.of(context).textTheme.subtitle1,),
-                    Text('Kredit: ${EnVar.MoneyFormat(_totalCredit)}', style: Theme.of(context).textTheme.subtitle1,),
-                    Text('Total: ${EnVar.MoneyFormat(_totalMoney)}', style: Theme.of(context).textTheme.subtitle1,),
+                    Text('Debit: ${EnVar.moneyFormat(_totalDebit)}', style: Theme.of(context).textTheme.subtitle1,),
+                    Text('Kredit: ${EnVar.moneyFormat(_totalCredit)}', style: Theme.of(context).textTheme.subtitle1,),
+                    Text('Total: ${EnVar.moneyFormat(_totalMoney)}', style: Theme.of(context).textTheme.subtitle1,),
                   ],
                 ),
               ),
@@ -360,7 +360,7 @@ class _AdminTransactionScreenState extends State<AdminTransactionScreen> {
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text('Total uang: ${EnVar.MoneyFormat(_totalMoney)}', style: Theme.of(context).textTheme.subtitle1,),
+                    Text('Total uang: ${EnVar.moneyFormat(_totalMoney)}', style: Theme.of(context).textTheme.subtitle1,),
                   ],
                 ),
               ),
@@ -431,7 +431,7 @@ class _AdminTransactionScreenState extends State<AdminTransactionScreen> {
                         fontWeight: FontWeight.w600,
                       ),),
                       const SizedBox(height: 6.0,),
-                      Text(EnVar.MoneyFormat(o.amount), style: const TextStyle(
+                      Text(EnVar.moneyFormat(o.amount), style: const TextStyle(
                         color: Colors.red,
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
@@ -578,7 +578,7 @@ class _ListViewState extends State<_ListView> {
                           fontWeight: FontWeight.w600,
                         ),),
                         const SizedBox(height: 6.0,),
-                        Text(EnVar.MoneyFormat(o.transaction_amount), style: TextStyle(
+                        Text(EnVar.moneyFormat(o.transaction_amount), style: TextStyle(
                           color: (o.is_debit) ? Colors.blue : Colors.red,
                           fontSize: 16.0,
                           fontWeight: FontWeight.w500,

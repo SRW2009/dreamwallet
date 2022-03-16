@@ -1,27 +1,19 @@
 
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:dreamwallet/objects/account/account.dart';
+import 'package:flutter/material.dart';
 import 'package:dreamwallet/objects/account/account_privilege.dart';
 import 'package:dreamwallet/objects/account/privileges/root.dart';
-import 'package:dreamwallet/objects/envar.dart';
+import 'package:dreamwallet/objects/request.dart';
 import 'package:dreamwallet/screen/admin.dart';
 import 'package:dreamwallet/screen/buyer.dart';
 import 'package:dreamwallet/screen/seller.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:dreamwallet/style/inputdecoration.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-
 import 'package:dreamwallet/main.dart';
-import 'package:uni_links/uni_links.dart';
 
 class LoginPage extends StatefulWidget {
-  final bool needVerification;
-
-  const LoginPage({Key? key, this.needVerification=false}) : super(key: key);
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -40,74 +32,8 @@ class _LoginPageState extends State<LoginPage> {
   var _errorMessage = '';
   var _isError = false;
 
-  late bool _needVerification;
+  var _needVerification = false;
   var _successRegister = false;
-
-  late StreamSubscription _sub;
-  Future<void> _checkUniLink() async {
-    try {
-      final initialUri = await getInitialUri();
-      print('initial uri: ${initialUri.toString()}');
-
-      if (initialUri != null) _uniLinkAction(initialUri);
-    }
-    on FormatException catch (e) {
-      print('initial uri format exception: ${e.message}');
-    }
-    on PlatformException catch (e) {
-      print('initial uri platform exception: ${e.message}');
-    }
-
-    _sub = uriLinkStream.listen((Uri? uri) {
-      print('stream uri: ${uri.toString()}');
-
-      if (uri != null) _uniLinkAction(uri);
-    }, onError: (err) {
-      print(err);
-    });
-  }
-
-  void _uniLinkAction(Uri uri) async {
-    try {
-      String phone = (await Account.getAccount())!.mobile;
-
-      final response = await http.post(
-        Uri.parse('${EnVar.API_URL_HOME}/verification'),
-        headers: EnVar.HTTP_HEADERS(),
-        body: jsonEncode({
-          "mobile": phone,
-        }),
-      );
-
-      print(response.statusCode);
-      print(response.body);
-      if (response.statusCode == 202) {
-        Account account = (await Account.getAccount())!;
-        account.isActive = true;
-        await Account.setAccount(account);
-
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const BuyerPage())
-        );
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  @override
-  void initState() {
-    _checkUniLink();
-    _needVerification = widget.needVerification;
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _sub.cancel();
-    super.dispose();
-  }
 
   Future<void> _login() async {
     if (_phoneController.text == '69420') {
@@ -123,34 +49,16 @@ class _LoginPageState extends State<LoginPage> {
       _isError = false;
       _isLoading = true;
     });
-    
-    final response = await http.post(
-      Uri.parse('${EnVar.API_URL_HOME}/login'),
-      headers: EnVar.HTTP_HEADERS(),
-      body: jsonEncode({
-        'account_mobile': '62'+_phoneController.text,
-      }),
-    );
 
-    print(response.statusCode);
-    print(response.body);
-    if (response.statusCode == 202) {
-      final data = jsonDecode(response.body)['data'];
-      String name = data['account_name'];
-      String phone = data['account_mobile'];
-      String status = data['account_status'];
-      bool isActive = data['is_active'];
-
-      if (!isActive) {
+    final loginResponse = await Request().login(_phoneController.text, _loginRadioGroup);
+    if (loginResponse.statusCode == 202) {
+      final account = loginResponse.account;
+      if (account == null) {
         setState(() {
           _needVerification = true;
         });
         return;
       }
-      Account account = Account(
-          phone, name, AccountPrivilege.parse(status)!, isActive
-      );
-      await Account.setAccount(account);
 
       if (account.status is Buyer) {
         Navigator.pushReplacement(
@@ -175,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
     else {
-      _showError(response.statusCode);
+      _showError(loginResponse.statusCode);
     }
 
     setState(() {
@@ -189,28 +97,14 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final response = await http.post(
-      Uri.parse('${EnVar.API_URL_HOME}/register'),
-      headers: EnVar.HTTP_HEADERS(),
-      body: jsonEncode({
-        'account_mobile': '62'+_phoneController.text,
-        'account_name' : _nameController.text,
-        'account_status': 'B',
-      }),
-    );
-
-    print(response.statusCode);
-    print(response.body);
-    if (response.statusCode == 201) {
-      Account account = Account('62'+_phoneController.text, _nameController.text, Buyer(), false);
-      await Account.setAccount(account);
-
+    final statusCode = await Request().register(_phoneController.text, _nameController.text);
+    if (statusCode == 201) {
       setState(() {
         _successRegister = true;
       });
     }
     else {
-      _showError(response.statusCode);
+      _showError(statusCode);
     }
 
     setState(() {
@@ -219,8 +113,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showError(int statusCode) {
-    print(statusCode);
-
     switch (statusCode) {
       case 404:
         setState(() {
@@ -468,7 +360,7 @@ class _LoginPageState extends State<LoginPage> {
     content: const Padding(
       padding: EdgeInsets.symmetric(vertical: 12.0),
       child: Text(
-        'Your account has been successfully registered, but still need to be verified. Please check your Whatsapp and click the link we sent to you to finish your registration.',
+        'Your account has been successfully registered, but still need to be verified. Please wait until admin verify your account.',
         style: TextStyle(color: Colors.white),
       ),
     ),

@@ -151,7 +151,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
             children: [
               Text('Are you sure you want to make a transaction with:\n'
                   'Name: $name \n'
-                  'Amount: ${EnVar.MoneyFormat(int.parse(amount))}'),
+                  'Amount: ${EnVar.moneyFormat(int.parse(amount))}'),
               if (!canPay) const Padding(
                 padding: EdgeInsets.only(top: 6.0),
                 child: Text('Not enough money to make this transaction!', style: TextStyle(color: Colors.red),),

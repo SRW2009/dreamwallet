@@ -203,7 +203,7 @@ class _AdminWithdrawScreenState extends State<AdminWithdrawScreen> {
             decoration: InputDecoration(
               labelText: 'Withdraw amount',
               prefixText: 'IDR ',
-              hintText: 'Max withdraw amount: '+EnVar.MoneyFormat(_maxWithdraw),
+              hintText: 'Max withdraw amount: '+EnVar.moneyFormat(_maxWithdraw),
             ),
             validator: (e) {
               if (e == null || e.isEmpty) return 'Please fill the field.';
@@ -252,7 +252,7 @@ class _AdminWithdrawScreenState extends State<AdminWithdrawScreen> {
               Text((widget.account != null) ? '${widget.account!.name}\'s Withdraw Record' : ' All Withdraw Record', style: Theme.of(context).textTheme.headline3,),
               Padding(
                 padding: const EdgeInsets.only(top: 12.0),
-                child: Text('Total Withdraw: ${EnVar.MoneyFormat(_totalWithdraw)}', style: Theme.of(context).textTheme.subtitle1,),
+                child: Text('Total Withdraw: ${EnVar.moneyFormat(_totalWithdraw)}', style: Theme.of(context).textTheme.subtitle1,),
               ),
             ],
           ),
@@ -422,7 +422,7 @@ class _ListViewState extends State<_ListView> {
                           fontWeight: FontWeight.w600,
                         ),),
                         const SizedBox(height: 6.0,),
-                        Text(EnVar.MoneyFormat(o.amount), style: const TextStyle(
+                        Text(EnVar.moneyFormat(o.amount), style: const TextStyle(
                           color: Colors.red,
                           fontSize: 16.0,
                           fontWeight: FontWeight.w500,

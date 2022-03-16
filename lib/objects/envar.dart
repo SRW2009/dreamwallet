@@ -17,12 +17,11 @@ class EnVar {
       'Content-Type': 'application/json; charset=UTF-8',
     };
   }
-  static String MoneyFormat(dynamic number) => NumberFormat.currency(
+
+  static String moneyFormat(dynamic number) => NumberFormat.currency(
     symbol: 'IDR ',
     decimalDigits: 0,
   ).format(number);
-
-
 
   static String getAllIdsAsString(List<String> ids) {
     String content = ids.first;

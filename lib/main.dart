@@ -134,18 +134,11 @@ class HomePage extends StatelessWidget {
         );
         return;
       }
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage(needVerification: true)),
-      );
     }
-    else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 
   @override

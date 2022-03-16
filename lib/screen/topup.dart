@@ -49,7 +49,7 @@ class _TopupScreenState extends State<TopupScreen> {
                           fontWeight: FontWeight.w600,
                         ),),
                         const SizedBox(height: 6.0,),
-                        Text(EnVar.MoneyFormat(o.transaction_amount), style: TextStyle(
+                        Text(EnVar.moneyFormat(o.transaction_amount), style: TextStyle(
                           color: (o.is_debit) ? Colors.blue : Colors.deepOrange,
                           fontSize: 16.0,
                           fontWeight: FontWeight.w500,
@@ -140,22 +140,22 @@ class _TopupScreenState extends State<TopupScreen> {
                   children: [
                     Text('Transactions', style: Theme.of(context).textTheme.headline3, textAlign: TextAlign.center,),
                     const SizedBox(height: 16.0,),
-                    if (Temp.withdrawTotal == null) Text('Current wallet: ${EnVar.MoneyFormat(Temp.total!)}', style: const TextStyle(
+                    if (Temp.withdrawTotal == null) Text('Current wallet: ${EnVar.moneyFormat(Temp.total!)}', style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14.0,
                       //fontWeight: FontWeight.w500,
                     ),),
-                    if (Temp.withdrawTotal != null) Text('Amount received: ${EnVar.MoneyFormat(Temp.total!)}', style: const TextStyle(
+                    if (Temp.withdrawTotal != null) Text('Amount received: ${EnVar.moneyFormat(Temp.total!)}', style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14.0,
                       //fontWeight: FontWeight.w500,
                     ),),
-                    if (Temp.withdrawTotal != null) Text('Total withdrawn: ${EnVar.MoneyFormat(Temp.withdrawTotal!)}', style: const TextStyle(
+                    if (Temp.withdrawTotal != null) Text('Total withdrawn: ${EnVar.moneyFormat(Temp.withdrawTotal!)}', style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14.0,
                       //fontWeight: FontWeight.w500,
                     ),),
-                    if (Temp.withdrawTotal != null) Text('Current wallet: ${EnVar.MoneyFormat(Temp.total! - Temp.withdrawTotal!)}', style: const TextStyle(
+                    if (Temp.withdrawTotal != null) Text('Current wallet: ${EnVar.moneyFormat(Temp.total! - Temp.withdrawTotal!)}', style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14.0,
                       //fontWeight: FontWeight.w500,
@@ -205,7 +205,7 @@ class _TopupScreenState extends State<TopupScreen> {
                           fontWeight: FontWeight.w600,
                         ),),
                         const SizedBox(height: 6.0,),
-                        Text(EnVar.MoneyFormat(o.amount), style: const TextStyle(
+                        Text(EnVar.moneyFormat(o.amount), style: const TextStyle(
                           color: Colors.red,
                           fontSize: 16.0,
                           fontWeight: FontWeight.w500,

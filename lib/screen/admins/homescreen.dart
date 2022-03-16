@@ -94,7 +94,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     children: [
                       const Text('Total Money:', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w600),),
                       const SizedBox(height: 8.0,),
-                      Text(EnVar.MoneyFormat(data.totalMoney), style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
+                      Text(EnVar.moneyFormat(data.totalMoney), style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
                     ],
                   ),
                 ),
@@ -107,7 +107,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     children: [
                       const Text('Total Buyer:', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w600),),
                       const SizedBox(height: 8.0,),
-                      Text(EnVar.MoneyFormat(data.totalBuyer), style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
+                      Text(EnVar.moneyFormat(data.totalBuyer), style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
                     ],
                   ),
                 ),
@@ -120,7 +120,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     children: [
                       const Text('Total Seller:', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w600),),
                       const SizedBox(height: 8.0,),
-                      Text(EnVar.MoneyFormat(data.totalSeller), style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
+                      Text(EnVar.moneyFormat(data.totalSeller), style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
                     ],
                   ),
                 ),
@@ -133,7 +133,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     children: [
                       const Text('Total Withdrawn:', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w600),),
                       const SizedBox(height: 8.0,),
-                      Text(EnVar.MoneyFormat(data.totalWithdraw), style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
+                      Text(EnVar.moneyFormat(data.totalWithdraw), style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
                     ],
                   ),
                 ),
