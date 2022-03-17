@@ -1,58 +1,89 @@
 
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:dreamwallet/objects/account/account.dart';
+import 'package:dreamwallet/objects/request/request.dart';
+import 'package:dreamwallet/objects/topup.dart';
 import 'package:dreamwallet/objects/transaction.dart';
 import 'package:dreamwallet/objects/withdraw.dart';
-import 'package:http/http.dart' as http;
 
 import 'account/privileges/root.dart';
-import 'envar.dart';
 
 class Temp {
-  static double? total;
   static List<Transaction>? transactionList;
+  static double? transactionTotal;
   static List<Withdraw>? withdrawList;
-  static int? withdrawTotal;
+  static double? withdrawTotal;
+  static List<Topup>? topupList;
+  static double? topupTotal;
+  static double? cashierMoneyOnHand;
+  static double? cashierMoneyReported;
 
-  static Future<void> fillTransactionData([int retryCount=0]) async {
+  static Future<void> fillTransactionData() async {
     try {
-      if (retryCount != 3) {
-        Account account = (await Account.getAccount())!;
+      final account = (await Account.getAccount())!;
 
-        String url;
-        if (account.status is Buyer) {
-          url = '${EnVar.API_URL_HOME}/transaction?depositor=${account.mobile}';
+      if (account.status is Buyer) {
+        transactionList = await Request().clientGetTransactions();
+      }
+      if (account.status is Seller) {
+        transactionList = await Request().merchantGetTransactions();
+      }
+      if (account.status is Admin) {
+        transactionList = await Request().adminGetTransactions();
+      }
+      transactionTotal = transactionList
+          ?.fold<double>(0, (previousValue, element) => previousValue+element.total);
+      transactionTotal = transactionTotal! - (withdrawTotal ?? 0);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  static Future<void> fillWithdrawData() async {
+    try {
+      final account = (await Account.getAccount())!;
+
+      if (account.status is Seller) {
+        withdrawList = await Request().merchantGetWithdrawals();
+      }
+      if (account.status is Admin) {
+        withdrawList = await Request().adminGetWithdrawals();
+      }
+      withdrawTotal = withdrawList
+          ?.fold<double>(0, (previousValue, element) => previousValue+element.total);
+      transactionTotal =  (transactionTotal ?? 0) - withdrawTotal!;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  static Future<void> fillTopupData() async {
+    try {
+      final account = (await Account.getAccount())!;
+
+      if (account.status is Cashier) {
+        topupList = await Request().cashierGetTopups();
+      }
+      if (account.status is Admin) {
+        topupList = await Request().adminGetTopups(null);
+      }
+      topupTotal = topupList
+          ?.fold<double>(0, (previousValue, element) => previousValue+element.total);
+
+      double moneyOnHand = 0.0, moneyReported = 0.0;
+      for (var element in topupList!) {
+        // if admin is null, then this topup is not reported yet
+        if (element.admin == null) {
+          moneyOnHand += element.total;
         } else {
-          url = '${EnVar.API_URL_HOME}/transaction?receiver=${account.mobile}';
-        }
-        final response = await http.get(
-          Uri.parse(url),
-          headers: EnVar.HTTP_HEADERS(),
-        );
-
-        print(response.statusCode);
-        print(response.body);
-        if (response.statusCode == 200) {
-          final body = jsonDecode(response.body)['response'];
-          final list = body['record'] as List;
-
-          total = (body['sum'] as int).toDouble();
-          if (account.status is Seller) {
-            total = total!*-1;
-            withdrawList = (body['withdraw'] as List).map<Withdraw>((e) => Withdraw.parse(e, account)).toList();
-            withdrawTotal = body['total_withdraw'] as int;
-          }
-          transactionList = list.map<Transaction>((e) => Transaction.parse(e)).toList();
-        }
-        else {
-          return fillTransactionData(++retryCount);
+          moneyReported += element.total;
         }
       }
-      else {
-        throw Exception();
-      }
-    } on TimeoutException {return fillTransactionData(++retryCount);}
+      cashierMoneyOnHand = moneyOnHand;
+      cashierMoneyReported = moneyReported;
+    } catch (e) {
+      print(e);
+    }
   }
 }

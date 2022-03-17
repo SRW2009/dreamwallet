@@ -5,9 +5,10 @@ import 'dart:io';
 
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/envar.dart';
-import 'package:dreamwallet/objects/request.dart';
+import 'package:dreamwallet/objects/request/request.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
-import 'package:dreamwallet/screen/topup.dart';
+import 'package:dreamwallet/screen/listview/transaction.dart';
+import 'package:dreamwallet/screen/login.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:qr_code_scanner/qr_code_scanner.dart';
@@ -24,7 +25,7 @@ class _BuyerPageState extends State<BuyerPage> {
   bool _isLoaded = false;
   int _bodyIndex = 0;
   final List<Widget> _bodies = [
-    const BuyerScreen(), const TopupScreen(),
+    const BuyerScreen(), const TransactionScreen(),
   ];
 
   late final Future<Account?> _account;
@@ -36,6 +37,14 @@ class _BuyerPageState extends State<BuyerPage> {
         _isLoaded = true;
       });
     }
+  }
+
+  void _logout() async {
+    await Account.unsetAccount();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 
   @override
@@ -50,6 +59,9 @@ class _BuyerPageState extends State<BuyerPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Buyer Menu'),
+        actions: [
+          IconButton(icon: const Icon(Icons.power_settings_new), onPressed: _logout,),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -196,7 +208,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
   }
 
   Future<bool> _askAgreementOnTransaction(String name, int amount) async {
-    final canPay = (Temp.total! - amount) >= 0;
+    final canPay = (Temp.transactionTotal! - amount) >= 0;
     return await Navigator.push<bool>(context, DialogRoute(context: context, builder: (c) => AlertDialog(
       title: const Text('Attention'),
       content: Column(

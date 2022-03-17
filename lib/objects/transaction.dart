@@ -3,32 +3,19 @@ import 'package:dreamwallet/objects/account/account.dart';
 
 class Transaction {
   int id;
-  bool is_debit;
-  String transactionName;
-  int transaction_amount;
-  String transaction_date;
-  String transaction_depositor;
-  String transaction_receiver;
-  Account depositor;
-  Account receiver;
+  double total;
+  Account client;
+  Account merchant;
+  String created_at;
 
   bool selected = false;
 
-  Transaction(
-      this.id,
-      this.is_debit,
-      this.transactionName,
-      this.transaction_amount,
-      this.transaction_date,
-      this.transaction_depositor,
-      this.transaction_receiver,
-      this.depositor,
-      this.receiver);
+  Transaction(this.id, this.total, this.client, this.merchant, this.created_at);
 
   static Transaction parse(dynamic e) => Transaction(
-      e['id'], e['is_debit'], e['TransactionName'],
-      e['transaction_amount'], e['transaction_date'],
-      e['transaction_depositor'], e['transaction_receiver'],
-      Account.parse(e['DDepositor']), Account.parse(e['DReceiver'])
+      e['id'], double.tryParse(e['total']) ?? 0,
+      Account.parseClient(e['client']),
+      Account.parseMerchant(e['merchant']),
+      e['created_at']
   );
 }

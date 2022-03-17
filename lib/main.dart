@@ -1,14 +1,27 @@
+
+import 'dart:io';
+
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/account/account_privilege.dart';
 import 'package:dreamwallet/screen/admin.dart';
 import 'package:dreamwallet/screen/buyer.dart';
+import 'package:dreamwallet/screen/cashier.dart';
 import 'package:dreamwallet/screen/login.dart';
 import 'package:dreamwallet/screen/seller.dart';
 import 'package:flutter/material.dart';
 
 import 'objects/account/privileges/root.dart';
 
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context){
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
+  }
+}
+
 void main() {
+  HttpOverrides.global = MyHttpOverrides();
   runApp(const MyApp());
 }
 
@@ -113,24 +126,24 @@ class HomePage extends StatelessWidget {
         );
         return;
       }
-      if (privilege is Buyer && account.isActive) {
+      if (privilege is Buyer) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const BuyerPage()),
         );
         return;
       }
-      if (privilege is Seller && account.isActive) {
+      if (privilege is Seller) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const SellerPage()),
         );
         return;
       }
-      if (privilege is Cashier && account.isActive) {
+      if (privilege is Cashier) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => Container()),// TODO: const CashierPage()),
+          MaterialPageRoute(builder: (context) => const CashierPage()),
         );
         return;
       }

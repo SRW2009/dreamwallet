@@ -1,10 +1,11 @@
 
 import 'dart:async';
 
+import 'package:dreamwallet/screen/cashier.dart';
 import 'package:flutter/material.dart';
 import 'package:dreamwallet/objects/account/account_privilege.dart';
 import 'package:dreamwallet/objects/account/privileges/root.dart';
-import 'package:dreamwallet/objects/request.dart';
+import 'package:dreamwallet/objects/request/request.dart';
 import 'package:dreamwallet/screen/admin.dart';
 import 'package:dreamwallet/screen/buyer.dart';
 import 'package:dreamwallet/screen/seller.dart';
@@ -51,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     final loginResponse = await Request().login(_phoneController.text, _loginRadioGroup);
-    if (loginResponse.statusCode == 202) {
+    if (loginResponse.statusCode == 201) {
       final account = loginResponse.account;
       if (account == null) {
         setState(() {
@@ -78,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
       } else if (account.status is Cashier) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => Container()),// TODO: const CashierPage()),
+          MaterialPageRoute(builder: (context) => const CashierPage()),
         );
       }
     }
@@ -221,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               AnimatedContainer(
-                                height: (_isRegister) ? 0.0 : 50.0,
+                                height: (_isRegister) ? 0.0 : 60.0,
                                 duration: const Duration(milliseconds: 300),
                                 child: SingleChildScrollView(
                                   child: AnimatedOpacity(
@@ -230,23 +231,27 @@ class _LoginPageState extends State<LoginPage> {
                                     child: Column(
                                       children: [
                                         const SizedBox(height: 12.0),
-                                        Row(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            const Padding(
-                                              padding: EdgeInsets.only(right: 12.0),
-                                              child: Text(
-                                                'Login As',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w700,
+                                        SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              const Padding(
+                                                padding: EdgeInsets.only(right: 12.0),
+                                                child: Text(
+                                                  'Login As',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            _loginRadio(Buyer(), 'Guest'),
-                                            _loginRadio(Seller(), 'Merchant'),
-                                            _loginRadio(Cashier(), 'Cashier'),
-                                            if (_isAdminActivated) _loginRadio(Admin(), 'Admin'),
-                                          ],
+                                              _loginRadio(Buyer(), 'Guest'),
+                                              _loginRadio(Seller(), 'Merchant'),
+                                              _loginRadio(Cashier(), 'Cashier'),
+                                              if (_isAdminActivated) _loginRadio(Admin(), 'Admin'),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -413,7 +418,7 @@ class _LoginPageState extends State<LoginPage> {
         },
       ),
       Padding(
-        padding: const EdgeInsets.only(left: 4.0, right: 10.0),
+        padding: const EdgeInsets.only(left: 2.0, right: 8.0),
         child: Text(title),
       ),
     ],

@@ -1,7 +1,9 @@
 
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
-import 'package:dreamwallet/screen/topup.dart';
+import 'package:dreamwallet/screen/listview/transaction.dart';
+import 'package:dreamwallet/screen/listview/withdraw.dart';
+import 'package:dreamwallet/screen/login.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:dreamwallet/style/inputdecoration.dart';
 import 'package:flutter/material.dart';
@@ -17,21 +19,30 @@ class SellerPage extends StatefulWidget {
 
 class _SellerPageState extends State<SellerPage> {
 
-  bool _isLoaded = false;
   int _bodyIndex = 0;
+  bool _isLoaded = false;
   final List<Widget> _bodies = [
-    const SellerScreen(), const TopupScreen(),
+    const SellerScreen(), const TransactionScreen(), const WithdrawScreen(),
   ];
 
   late final Future<Account?> _account;
   void _load() async {
     await Temp.fillTransactionData();
+    await Temp.fillWithdrawData();
 
     if (Temp.transactionList != null) {
       setState(() {
         _isLoaded = true;
       });
     }
+  }
+
+  void _logout() async {
+    await Account.unsetAccount();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 
   @override
@@ -46,6 +57,9 @@ class _SellerPageState extends State<SellerPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Seller Menu'),
+        actions: [
+          IconButton(icon: const Icon(Icons.power_settings_new), onPressed: _logout,),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -100,6 +114,17 @@ class _SellerPageState extends State<SellerPage> {
               onTap:() {
                 setState(() {
                   _bodyIndex = 1;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              selected: (_bodyIndex == 2),
+              leading: const Icon(Icons.list),
+              title: const Text('Withdraw List'),
+              onTap:() {
+                setState(() {
+                  _bodyIndex = 2;
                 });
                 Navigator.pop(context);
               },

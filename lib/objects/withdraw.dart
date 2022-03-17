@@ -3,16 +3,19 @@ import 'package:dreamwallet/objects/account/account.dart';
 
 class Withdraw {
   int id;
-  String seller_id;
-  int amount;
-  Account seller;
+  double total;
+  Account admin;
+  Account merchant;
+  String created_at;
 
   bool selected = false;
 
-  Withdraw(this.id, this.seller_id, this.amount, this.seller);
+  Withdraw(this.id, this.total, this.admin, this.merchant, this.created_at);
 
   static Withdraw parse(dynamic e, [Account? account]) => Withdraw(
-      e['ID'], e['seller_id'], e['amount'],
-      account ?? Account.parse(e['S'])
+      e['id'], double.tryParse(e['total']) ?? 0,
+      Account.parseAdmin(e['admin']),
+      Account.parseMerchant(e['merchant']),
+      e['created_at']
   );
 }
