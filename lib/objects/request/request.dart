@@ -18,6 +18,7 @@ abstract class _Req {
   Future<int> clientRegister(String phone, String name);
   Future<int> clientCreateTransaction(String phone, int amount);
   Future<List<Transaction>> clientGetTransactions();
+  Future<List<Topup>> clientGetTopups();
 
   Future<List<Transaction>> merchantGetTransactions();
   Future<List<Withdraw>> merchantGetWithdrawals();
@@ -67,18 +68,14 @@ class Request with Urls implements _Req {
       if (privilege is Seller) priv = 'merchant';
       if (privilege is Cashier) priv = 'cashier';
       if (privilege is Admin) priv = 'admin';
-      final account = Account(0, phone, data[priv!], privilege,
-          token: data['token']);
-      bool? isActive = data['client']?['is_active'];
-
-      if (isActive != null && !isActive) {
-        return _LoginResponse(response.statusCode, null);
-      }
+      final accountData = data[priv!];
+      final account = Account(accountData['id'], phone, accountData['name'],
+          privilege, token: data['token']);
 
       await Account.setAccount(account);
       return _LoginResponse(response.statusCode, account);
     }
-    return _LoginResponse(response.statusCode, null);
+    return _LoginResponse(response.statusCode, null, errorMessage: jsonDecode(response.body)['error']);
   }
 
   @override
@@ -88,8 +85,8 @@ class Request with Urls implements _Req {
       Uri.parse(clientRegisterUrl),
       headers: EnVar.HTTP_HEADERS(),
       body: jsonEncode({
-        'account_mobile': formPhone,
-        'account_name' : name,
+        'phone': formPhone,
+        'name' : name,
       }),
     );
     return response.statusCode;
@@ -105,9 +102,7 @@ class Request with Urls implements _Req {
       Uri.parse(clientCreateTransactionUrl),
       headers: EnVar.HTTP_HEADERS(token: account.token),
       body: jsonEncode({
-        "is_debit": false,
-        "transaction_amount": amount,
-        "transaction_date": date.toIso8601String().split('T')[0],
+        "total": amount,
         "merchant_id": phone
       }),
     );
@@ -171,9 +166,10 @@ class Request with Urls implements _Req {
       headers: EnVar.HTTP_HEADERS(token: account.token),
     );
 
+    print([response.statusCode, response.body]);
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
-      return list.map<Account>((e) => Account.parseClient(e)).toList();
+      return list.map<Account>((e) => Account.parseClientInAdminAccount(e)).toList();
     }
     throw Exception();
   }
@@ -290,7 +286,7 @@ class Request with Urls implements _Req {
 
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
-      return list.map<Account>((e) => Account.parseClient(e)).toList();
+      return list.map<Account>((e) => Account.parseClientInAdminAccount(e)).toList();
     }
     throw Exception();
   }
@@ -304,6 +300,7 @@ class Request with Urls implements _Req {
       headers: EnVar.HTTP_HEADERS(token: account.token),
     );
 
+    print(response.body);
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
       return list.map<Topup>((e) => Topup.parse(e)).toList();
@@ -320,8 +317,8 @@ class Request with Urls implements _Req {
       Uri.parse(cashierTopupUrl),
       headers: EnVar.HTTP_HEADERS(token: account.token),
       body: jsonEncode({
+        'client_id': clientId,
         'total': total.toInt(),
-        'client_id': clientId
       }),
     );
 
@@ -393,11 +390,28 @@ class Request with Urls implements _Req {
     );
     return response.statusCode;
   }
+
+  @override
+  Future<List<Topup>> clientGetTopups() async {
+    Account account = (await Account.getAccount())!;
+
+    final response = await http.get(
+      Uri.parse(clientGetTopupsUrl),
+      headers: EnVar.HTTP_HEADERS(token: account.token),
+    );
+
+    if (response.statusCode == 200) {
+      final list = jsonDecode(response.body) as List;
+      return list.map<Topup>((e) => Topup.parse(e)).toList();
+    }
+    throw Exception();
+  }
 }
 
 class _LoginResponse {
   final int statusCode;
   final Account? account;
+  final String? errorMessage;
 
-  _LoginResponse(this.statusCode, this.account);
+  _LoginResponse(this.statusCode, this.account, {this.errorMessage});
 }

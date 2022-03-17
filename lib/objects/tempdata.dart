@@ -62,6 +62,18 @@ class Temp {
     try {
       final account = (await Account.getAccount())!;
 
+      if (account.status is Buyer) {
+        //topupList = await Request().clientGetTopups();
+        topupList = <Topup>[
+          Topup(
+            0, 100000,
+            Account.parseClient({'id':0, 'name':''}),
+            null,
+            Account.parseCashier({'id':0, 'name':'Kasir QBS'}),
+            '2022-03-01',
+          ),
+        ];
+      }
       if (account.status is Cashier) {
         topupList = await Request().cashierGetTopups();
       }
@@ -85,5 +97,16 @@ class Temp {
     } catch (e) {
       print(e);
     }
+  }
+
+  static void clear() {
+    transactionList = null;
+    transactionTotal = null;
+    withdrawList = null;
+    withdrawTotal = null;
+    topupList = null;
+    topupTotal = null;
+    cashierMoneyOnHand = null;
+    cashierMoneyReported = null;
   }
 }

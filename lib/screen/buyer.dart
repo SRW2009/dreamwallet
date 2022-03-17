@@ -9,8 +9,8 @@ import 'package:dreamwallet/objects/request/request.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/screen/listview/transaction.dart';
 import 'package:dreamwallet/screen/login.dart';
+import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class BuyerPage extends StatefulWidget {
@@ -24,15 +24,18 @@ class _BuyerPageState extends State<BuyerPage> {
 
   bool _isLoaded = false;
   int _bodyIndex = 0;
-  final List<Widget> _bodies = [
-    const BuyerScreen(), const TransactionScreen(),
+  late final List<Widget> _bodies = [
+    BuyerScreen(reload: _reload,),
+    const TransactionScreen(),
   ];
 
   late final Future<Account?> _account;
   void _load() async {
     await Temp.fillTransactionData();
+    await Temp.fillTopupData();
 
-    if (Temp.transactionList != null) {
+    if (Temp.transactionList != null
+      && Temp.topupList != null) {
       setState(() {
         _isLoaded = true;
       });
@@ -45,6 +48,13 @@ class _BuyerPageState extends State<BuyerPage> {
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
     );
+  }
+
+  void _reload() {
+    setState(() {
+      _isLoaded = false;
+    });
+    _load();
   }
 
   @override
@@ -129,7 +139,9 @@ class _BuyerPageState extends State<BuyerPage> {
 }
 
 class BuyerScreen extends StatefulWidget {
-  const BuyerScreen({Key? key}) : super(key: key);
+  final Function() reload;
+
+  const BuyerScreen({Key? key, required this.reload}) : super(key: key);
 
   @override
   _BuyerScreenState createState() => _BuyerScreenState();
@@ -208,7 +220,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
   }
 
   Future<bool> _askAgreementOnTransaction(String name, int amount) async {
-    final canPay = (Temp.transactionTotal! - amount) >= 0;
+    final canPay = (Temp.topupTotal! - Temp.transactionTotal! - amount) >= 0;
     return await Navigator.push<bool>(context, DialogRoute(context: context, builder: (c) => AlertDialog(
       title: const Text('Attention'),
       content: Column(
@@ -257,71 +269,93 @@ class _BuyerScreenState extends State<BuyerScreen> {
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
 
-    return Stack(
+    return Column(
+      mainAxisSize: MainAxisSize.max,
       children: [
-        Positioned(
-          bottom: -20.0, right: -20.0,
-          child: Opacity(
-            opacity: 0.5,
-            child: Image.asset(
-              'images/dreamland-black.png',
-              height: 250.0,
+        MaterialBanner(
+          content: Text(
+            'Saldo: ${EnVar.moneyFormat(Temp.topupTotal!-Temp.transactionTotal!)}',
+            style: const TextStyle(
+              color: Colors.white,
             ),
           ),
-        ),
-        Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: screenSize.shortestSide,
-              maxHeight: screenSize.longestSide,
+          actions: [
+            TextButton(
+              style: MyButtonStyle.primaryTextButtonStyle(context),
+              child: const Text('RELOAD'),
+              onPressed: widget.reload,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Stack(
+          ],
+        ),
+        Expanded(
+          child: Stack(
+            children: [
+              Positioned(
+                bottom: -20.0, right: -20.0,
+                child: Opacity(
+                  opacity: 0.5,
+                  child: Image.asset(
+                    'images/dreamland-black.png',
+                    height: 250.0,
+                  ),
+                ),
+              ),
+              Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: screenSize.shortestSide,
+                    maxHeight: screenSize.longestSide,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Center(
-                        child: Text('No Camera Detected.'),
-                      ),
-                      QRView(
-                        key: qrKey,
-                        onQRViewCreated: _onQRViewCreated,
-                        overlay: QrScannerOverlayShape(),
-                      ),
-                      if (_isLoadingTransaction) Container(
-                        color: Colors.black.withOpacity(0.2),
-                        padding: const EdgeInsets.all(16.0),
-                        child: Center(
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    value: (_currentTimer == 0)
-                                        ? null
-                                        : _currentTimer/_transactionDelay,
-                                  ),
-                                ),
-                                if (_currentTimer != 0) Positioned.fill(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24.0),
-                                    child: FittedBox(child: Text('$_currentTimer', style: const TextStyle(color: Colors.white),)),
-                                  ),
-                                ),
-                              ],
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            const Center(
+                              child: Text('No Camera Detected.'),
                             ),
-                          ),
+                            QRView(
+                              key: qrKey,
+                              onQRViewCreated: _onQRViewCreated,
+                              overlay: QrScannerOverlayShape(),
+                            ),
+                            if (_isLoadingTransaction) Container(
+                              color: Colors.black.withOpacity(0.2),
+                              padding: const EdgeInsets.all(16.0),
+                              child: Center(
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: Stack(
+                                    children: [
+                                      Positioned.fill(
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          value: (_currentTimer == 0)
+                                              ? null
+                                              : _currentTimer/_transactionDelay,
+                                        ),
+                                      ),
+                                      if (_currentTimer != 0) Positioned.fill(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(24.0),
+                                          child: FittedBox(child: Text('$_currentTimer', style: const TextStyle(color: Colors.white),)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],

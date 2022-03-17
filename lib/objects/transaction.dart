@@ -14,7 +14,7 @@ class Transaction {
 
   static Transaction parse(dynamic e) => Transaction(
       e['id'], double.tryParse(e['total']) ?? 0,
-      Account.parseClient(e['client']),
+      Account.parseClientInAdminAccount(e['client']),
       Account.parseMerchant(e['merchant']),
       e['created_at']
   );

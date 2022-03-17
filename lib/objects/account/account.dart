@@ -1,5 +1,6 @@
 
 import 'package:dreamwallet/objects/account/account_privilege.dart';
+import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'privileges/root.dart';
@@ -19,6 +20,10 @@ class Account {
   bool? is_active;
 
   Account(this.id, this.mobile, this.name, this.status, {this.token});
+
+  factory Account.parseClientInAdminAccount(dynamic c) => Account(
+    c['id'], c['phone'], c['name'], Buyer(),
+  )..is_active=c['is_active'];
 
   factory Account.parseClient(dynamic c) => Account(
     c['id'], '', c['name'], Buyer(),
@@ -60,6 +65,7 @@ class Account {
   }
 
   static Future<bool> unsetAccount() async {
+    Temp.clear();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.clear();
   }

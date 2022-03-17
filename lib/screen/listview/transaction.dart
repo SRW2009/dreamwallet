@@ -1,7 +1,6 @@
 
 import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
-import 'package:dreamwallet/objects/transaction.dart';
 import 'package:flutter/material.dart';
 
 class TransactionScreen extends StatefulWidget {
@@ -60,7 +59,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                     title: const Text('Toko'),
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(8.0).copyWith(bottom: 0.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -106,7 +105,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                         Text('Transactions', style: Theme.of(context).textTheme.headline3, textAlign: TextAlign.center,),
                         const SizedBox(height: 16.0,),
                         Text(
-                          'Current wallet: ${EnVar.moneyFormat(Temp.transactionTotal!)}',
+                          'Total Transaction: ${EnVar.moneyFormat(Temp.transactionTotal!)}',
                           style: const TextStyle(
                             color: Colors.black87,
                             fontSize: 14.0,

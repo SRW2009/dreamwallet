@@ -84,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
     else {
-      _showError(loginResponse.statusCode);
+      _showError(loginResponse.errorMessage);
     }
 
     setState(() {
@@ -105,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
     else {
-      _showError(statusCode);
+      _showError('Terjadi masalah');
     }
 
     setState(() {
@@ -113,27 +113,11 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  void _showError(int statusCode) {
-    switch (statusCode) {
-      case 404:
-        setState(() {
-          _isError = true;
-          _errorMessage = 'Account not registered yet.';
-        });
-        break;
-      case 500:
-        setState(() {
-          _isError = true;
-          _errorMessage = 'Account already registered, please login with said phone number.';
-        });
-        break;
-      default:
-        setState(() {
-          _isError = true;
-          _errorMessage = 'Something went wrong. Please check your internet connection and try again.';
-        });
-        break;
-    }
+  void _showError(String? errorMessage) {
+    setState(() {
+      _isError = true;
+      _errorMessage = '$errorMessage';
+    });
   }
 
   @override
