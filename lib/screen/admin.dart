@@ -57,8 +57,8 @@ class AdminPageState extends State<AdminPage>{
       const AdminHomeScreen(),
       const AdminAccountScreen(),
       const AdminTransactionScreen(),
-      const AdminWithdrawScreen(),
-      const AdminTopupScreen(),
+      AdminWithdrawScreen(reload: reload,),
+      AdminTopupScreen(reload: reload,),
       //const AdminReportScreen(),
     ]);
     _isLoaded = _load();

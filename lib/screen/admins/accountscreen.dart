@@ -279,10 +279,10 @@ class _ListView extends StatefulWidget {
 class _ListViewState extends State<_ListView> {
   int _filterCount = 0;
 
-  static const STATUS_ALL = 0;
+  /*static const STATUS_ALL = 0;
   static const STATUS_BUYER = 1;
   static const STATUS_SELLER = 2;
-  static const STATUS_ADMIN = 3;
+  static const STATUS_ADMIN = 3;*/
 
   static const ACTIVE_ALL = 0;
   static const ACTIVE_ACTIVATED = 1;
@@ -304,7 +304,7 @@ class _ListViewState extends State<_ListView> {
     // filter query
     _filteredList = _filteredList.where((element) => element.name.toLowerCase().contains(query.toLowerCase())).toList();
     // filter status
-    switch (statusGroup) {
+    /*switch (statusGroup) {
       case STATUS_BUYER:
         _filteredList = _filteredList.where((element) => element.status is Buyer).toList();
         break;
@@ -316,7 +316,7 @@ class _ListViewState extends State<_ListView> {
         break;
       default:
         break;
-    }
+    }*/
     // filter activated
     switch (activeGroup) {
       case ACTIVE_ACTIVATED:
@@ -365,7 +365,7 @@ class _ListViewState extends State<_ListView> {
                 mainAxisSize: MainAxisSize.max,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
+                  /*Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
@@ -442,7 +442,7 @@ class _ListViewState extends State<_ListView> {
                       ),
                     ],
                   ),
-                  const SizedBox(width: 20.0,),
+                  const SizedBox(width: 20.0,),*/
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

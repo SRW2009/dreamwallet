@@ -164,9 +164,9 @@ class _BuyerScreenState extends State<BuyerScreen> {
         if (resultText == null) return;
 
         String name = resultText.split(';')[0].split(':')[1];
-        String phone = resultText.split(';')[1].split(':')[1];
+        int? id = int.tryParse(resultText.split(';')[1].split(':')[1]);
         int? amount = int.tryParse(resultText.split(';')[2].split(':')[1]);
-        if (amount == null) return;
+        if (id == null || amount == null) return;
 
         _stopDoTransaction = true;
         final clientAgree = await _askAgreementOnTransaction(name, amount);
@@ -174,7 +174,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
           setState(() {
             _isLoadingTransaction = true;
           });
-          await _doTransaction(phone, amount);
+          await _doTransaction(id, amount);
           setState(() {
             _currentTimer = _transactionDelay;
           });
@@ -226,7 +226,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Are you sure you want to make a transaction with:\n'
+          Text('Are you sure you want to make a transaction with:\n\n'
               'Name: $name \n'
               'Amount: ${EnVar.moneyFormat(amount)}'),
           if (!canPay) const Padding(
@@ -253,8 +253,8 @@ class _BuyerScreenState extends State<BuyerScreen> {
     ))) ?? false;
   }
 
-  Future<void> _doTransaction(String phone, int amount) async {
-    final statusCode = await Request().clientCreateTransaction(phone, amount);
+  Future<void> _doTransaction(int merchantId, int amount) async {
+    final statusCode = await Request().clientCreateTransaction(merchantId, amount);
 
     if (statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -13,8 +13,8 @@ class Transaction {
   Transaction(this.id, this.total, this.client, this.merchant, this.created_at);
 
   static Transaction parse(dynamic e) => Transaction(
-      e['id'], double.tryParse(e['total']) ?? 0,
-      Account.parseClientInAdminAccount(e['client']),
+      e['id'], (e['total'] as int).toDouble(),
+      Account.parseClient(e['client']),
       Account.parseMerchant(e['merchant']),
       e['created_at']
   );

@@ -13,7 +13,7 @@ class Withdraw {
   Withdraw(this.id, this.total, this.admin, this.merchant, this.created_at);
 
   static Withdraw parse(dynamic e, [Account? account]) => Withdraw(
-      e['id'], double.tryParse(e['total']) ?? 0,
+      e['id'], (e['total'] as int).toDouble(),
       Account.parseAdmin(e['admin']),
       Account.parseMerchant(e['merchant']),
       e['created_at']

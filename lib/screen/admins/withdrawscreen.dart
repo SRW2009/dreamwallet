@@ -12,15 +12,15 @@ import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:flutter/material.dart';
 
 class AdminWithdrawScreen extends StatefulWidget {
-  const AdminWithdrawScreen({Key? key}) : super(key: key);
+  final Function() reload;
+
+  const AdminWithdrawScreen({Key? key, required this.reload}) : super(key: key);
 
   @override
   _AdminWithdrawScreenState createState() => _AdminWithdrawScreenState();
 }
 
 class _AdminWithdrawScreenState extends State<AdminWithdrawScreen> {
-
-  final _rootKey = GlobalKey<AdminPageState>();
   final _formKey = GlobalKey<FormState>();
   Account? _merchantCon;
   final _amountCon = TextEditingController();
@@ -39,7 +39,7 @@ class _AdminWithdrawScreenState extends State<AdminWithdrawScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Success')));
 
-      _rootKey.currentState!.reload();
+      widget.reload();
     }
     else {
       ScaffoldMessenger.of(context).showSnackBar(

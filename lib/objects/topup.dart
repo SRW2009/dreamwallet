@@ -13,6 +13,8 @@ class Topup {
 
   bool topuppedByCashier() => cashier != null;
 
+  bool verifiedByAdmin() => admin != null;
+
   Topup(this.id, this.total, this.client, this.admin, this.cashier,
       this.created_at);
 

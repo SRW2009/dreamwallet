@@ -225,11 +225,11 @@ class _SellerScreenState extends State<SellerScreen> {
                           Account? account = await Account.getAccount();
                           if (account == null) return;
                           String name = account.name;
-                          String phone = account.mobile;
+                          int id = account.id;
 
                           try {
                             setState(() {
-                              _qrData = 'name:$name;mobile:$phone;amount:$amount';
+                              _qrData = 'name:$name;id:$id;amount:$amount';
                             });
                           } catch (e) {}
                         }

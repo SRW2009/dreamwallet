@@ -16,7 +16,7 @@ abstract class _Req {
   Future<_LoginResponse> login(String phone, AccountPrivilege privilege);
 
   Future<int> clientRegister(String phone, String name);
-  Future<int> clientCreateTransaction(String phone, int amount);
+  Future<int> clientCreateTransaction(int merchantId, int amount);
   Future<List<Transaction>> clientGetTransactions();
   Future<List<Topup>> clientGetTopups();
 
@@ -107,8 +107,7 @@ class Request with Urls implements _Req {
   }
 
   @override
-  Future<int> clientCreateTransaction(String phone, int amount) async {
-    DateTime date = DateTime.now();
+  Future<int> clientCreateTransaction(int merchantId, int amount) async {
     Account? account = await Account.getAccount();
     if (account == null) return 0;
 
@@ -117,7 +116,7 @@ class Request with Urls implements _Req {
       headers: EnVar.HTTP_HEADERS(token: account.token),
       body: jsonEncode({
         "total": amount,
-        "merchant_id": phone
+        "merchant_id": merchantId
       }),
     );
     return response.statusCode;
@@ -179,8 +178,6 @@ class Request with Urls implements _Req {
       Uri.parse(adminGetAccountsUrl),
       headers: EnVar.HTTP_HEADERS(token: account.token),
     );
-
-    print([response.statusCode, response.body]);
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
       return list.map<Account>((e) => Account.parseClientInAdminAccount(e)).toList();
@@ -297,10 +294,9 @@ class Request with Urls implements _Req {
       Uri.parse(cashierGetClientsUrl),
       headers: EnVar.HTTP_HEADERS(token: account.token),
     );
-
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
-      return list.map<Account>((e) => Account.parseClientInAdminAccount(e)).toList();
+      return list.map<Account>((e) => Account.parseClient(e)).toList();
     }
     throw Exception();
   }
@@ -313,8 +309,6 @@ class Request with Urls implements _Req {
       Uri.parse(cashierGetTopupsUrl),
       headers: EnVar.HTTP_HEADERS(token: account.token),
     );
-
-    print(response.body);
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
       return list.map<Topup>((e) => Topup.parse(e)).toList();
