@@ -13,9 +13,9 @@ import '../account/privileges/root.dart';
 import 'urls.dart';
 
 abstract class _Req {
-  Future<_LoginResponse> login(String phone, AccountPrivilege privilege);
+  Future<_AuthResponse> login(String phone, AccountPrivilege privilege);
 
-  Future<int> clientRegister(String phone, String name);
+  Future<_AuthResponse> clientRegister(String phone, String name);
   Future<int> clientCreateTransaction(int merchantId, int amount);
   Future<List<Transaction>> clientGetTransactions();
   Future<List<Topup>> clientGetTopups();
@@ -46,7 +46,7 @@ class Request with Urls implements _Req {
   factory Request() => _instance;
 
   @override
-  Future<_LoginResponse> login(String phone, AccountPrivilege privilege) async {
+  Future<_AuthResponse> login(String phone, AccountPrivilege privilege) async {
     final formPhone = '62'+phone;
     String? url;
     if (privilege is Buyer) url = clientLoginUrl;
@@ -87,13 +87,13 @@ class Request with Urls implements _Req {
           privilege, token: data['token']);
 
       await Account.setAccount(account);
-      return _LoginResponse(response.statusCode, account);
+      return _AuthResponse(response.statusCode, account: account);
     }
-    return _LoginResponse(response.statusCode, null, errorMessage: jsonDecode(response.body)['error']);
+    return _AuthResponse(response.statusCode, errorMessage: jsonDecode(response.body)['error']);
   }
 
   @override
-  Future<int> clientRegister(String phone, String name) async {
+  Future<_AuthResponse> clientRegister(String phone, String name) async {
     final formPhone = '62'+phone;
     final response = await http.post(
       Uri.parse(clientRegisterUrl),
@@ -103,7 +103,8 @@ class Request with Urls implements _Req {
         'name' : name,
       }),
     );
-    return response.statusCode;
+
+    return _AuthResponse(response.statusCode, errorMessage: jsonDecode(response.body)['error']);
   }
 
   @override
@@ -214,7 +215,6 @@ class Request with Urls implements _Req {
 
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
-      print('topup');
       return list.map<Topup>((e) => Topup.parse(e)).toList();
     }
     throw Exception();
@@ -231,7 +231,6 @@ class Request with Urls implements _Req {
 
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
-      print('withdraw');
       return list.map<Withdraw>((e) => Withdraw.parse(e)).toList();
     }
     throw Exception();
@@ -373,11 +372,8 @@ class Request with Urls implements _Req {
       Uri.parse(adminGetTransactionsUrl),
       headers: EnVar.HTTP_HEADERS(token: account.token),
     );
-
-    print([response.statusCode, response.body]);
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
-      print('transactions');
       return list.map<Transaction>((e) => Transaction.parse(e)).toList();
     }
     throw Exception();
@@ -401,6 +397,16 @@ class Request with Urls implements _Req {
 
   @override
   Future<List<Topup>> clientGetTopups() async {
+    /*final topupList = <Topup>[
+      Topup(
+        0, 100000,
+        Account.parseClient({'id':0, 'name':''}),
+        null,
+        Account.parseCashier({'id':0, 'name':'Kasir QBS'}),
+        '2022-03-01',
+      ),
+    ];*/
+
     Account account = (await Account.getAccount())!;
 
     final response = await http.get(
@@ -416,10 +422,10 @@ class Request with Urls implements _Req {
   }
 }
 
-class _LoginResponse {
+class _AuthResponse {
   final int statusCode;
   final Account? account;
   final String? errorMessage;
 
-  _LoginResponse(this.statusCode, this.account, {this.errorMessage});
+  _AuthResponse(this.statusCode, {this.errorMessage, this.account});
 }

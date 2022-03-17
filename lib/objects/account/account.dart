@@ -41,6 +41,15 @@ class Account {
     c['id'], '', c['name'], Admin(),
   );
 
+  @override
+  bool operator ==(Object other) => (other is Account)
+      && other.id == id
+      && other.status == status;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^ status.hashCode;
+
   static Future<Account?> getAccount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 

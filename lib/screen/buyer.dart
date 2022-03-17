@@ -22,8 +22,9 @@ class BuyerPage extends StatefulWidget {
 
 class _BuyerPageState extends State<BuyerPage> {
 
-  bool _isLoaded = false;
   int _bodyIndex = 0;
+  bool _isLoaded = false;
+  bool _isError = false;
   late final List<Widget> _bodies = [
     BuyerScreen(reload: _reload,),
     const TransactionScreen(),
@@ -34,12 +35,23 @@ class _BuyerPageState extends State<BuyerPage> {
     await Temp.fillTransactionData();
     await Temp.fillTopupData();
 
-    if (Temp.transactionList != null
-      && Temp.topupList != null) {
+    if (Temp.transactionList != null && Temp.topupList != null) {
       setState(() {
         _isLoaded = true;
       });
+      return;
     }
+    setState(() {
+      _isError = true;
+    });
+  }
+
+  void _reload() {
+    setState(() {
+      _isLoaded = false;
+      _isError = false;
+    });
+    _load();
   }
 
   void _logout() async {
@@ -48,13 +60,6 @@ class _BuyerPageState extends State<BuyerPage> {
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
     );
-  }
-
-  void _reload() {
-    setState(() {
-      _isLoaded = false;
-    });
-    _load();
   }
 
   @override
@@ -133,7 +138,25 @@ class _BuyerPageState extends State<BuyerPage> {
           ],
         ),
       ),
-      body: (_isLoaded) ? _bodies[_bodyIndex] : const Center(child: CircularProgressIndicator(),),
+      body: (_isLoaded)
+          ? _bodies[_bodyIndex]
+          : (_isError)
+          ? Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0),
+              child: Text('Something\'s wrong.'),
+            ),
+            ElevatedButton(
+              onPressed: _reload,
+              child: const Text('Reload'),
+            ),
+          ],
+        ),
+      )
+          : const Center(child: CircularProgressIndicator(),),
     );
   }
 }

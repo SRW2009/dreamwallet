@@ -26,11 +26,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   @override
   void initState() {
     data = _AdminHomeObject(
-        Temp.topupTotal!.toInt(),
         (Temp.topupTotal! - Temp.transactionTotal!).toInt(),
-        Temp.transactionTotal!.toInt(),
+        (Temp.transactionTotal! - Temp.withdrawTotal!).toInt(),
+        (Temp.topupTotal! - Temp.withdrawTotal!).toInt(),
         Temp.withdrawTotal!.toInt()
     );
+    print([Temp.topupTotal, Temp.transactionTotal, Temp.withdrawTotal]);
     super.initState();
   }
 

@@ -98,14 +98,14 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final statusCode = await Request().clientRegister(_phoneController.text, _nameController.text);
-    if (statusCode == 201) {
+    final response = await Request().clientRegister(_phoneController.text, _nameController.text);
+    if (response.statusCode == 201) {
       setState(() {
         _successRegister = true;
       });
     }
     else {
-      _showError('Something\'s wrong.');
+      _showError(response.errorMessage);
     }
 
     setState(() {

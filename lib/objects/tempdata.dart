@@ -34,7 +34,6 @@ class Temp {
       }
       transactionTotal = transactionList
           ?.fold<double>(0, (previousValue, element) => previousValue+element.total);
-      transactionTotal = transactionTotal! - (withdrawTotal ?? 0);
     } catch (e) {
       print(e);
     }
@@ -52,7 +51,6 @@ class Temp {
       }
       withdrawTotal = withdrawList
           ?.fold<double>(0, (previousValue, element) => previousValue+element.total);
-      transactionTotal =  (transactionTotal ?? 0) - withdrawTotal!;
     } catch (e) {
       print(e);
     }
@@ -63,16 +61,7 @@ class Temp {
       final account = (await Account.getAccount())!;
 
       if (account.status is Buyer) {
-        //topupList = await Request().clientGetTopups();
-        topupList = <Topup>[
-          Topup(
-            0, 100000,
-            Account.parseClient({'id':0, 'name':''}),
-            null,
-            Account.parseCashier({'id':0, 'name':'Kasir QBS'}),
-            '2022-03-01',
-          ),
-        ];
+        topupList = await Request().clientGetTopups();
       }
       if (account.status is Cashier) {
         topupList = await Request().cashierGetTopups();

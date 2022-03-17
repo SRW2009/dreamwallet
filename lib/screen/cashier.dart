@@ -24,8 +24,9 @@ class CashierPage extends StatefulWidget {
 
 class _CashierPageState extends State<CashierPage> {
 
-  bool _isLoaded = false;
   int _bodyIndex = 0;
+  bool _isLoaded = false;
+  bool _isError = false;
   final List<Widget> _bodies = [
     const CashierScreen(), const TopupScreen(),
   ];
@@ -38,12 +39,17 @@ class _CashierPageState extends State<CashierPage> {
       setState(() {
         _isLoaded = true;
       });
+      return;
     }
+    setState(() {
+      _isError = true;
+    });
   }
 
-  void reload() {
+  void _reload() {
     setState(() {
       _isLoaded = false;
+      _isError = false;
     });
     _load();
   }
@@ -72,7 +78,7 @@ class _CashierPageState extends State<CashierPage> {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Success')));
 
-      reload();
+      _reload();
     }
     else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +99,7 @@ class _CashierPageState extends State<CashierPage> {
       appBar: AppBar(
         title: const Text('Cashier Menu'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: reload,),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _reload,),
           IconButton(icon: const Icon(Icons.power_settings_new), onPressed: _logout,),
         ],
       ),
@@ -157,11 +163,29 @@ class _CashierPageState extends State<CashierPage> {
           ],
         ),
       ),
-      body: (_isLoaded) ? _bodies[_bodyIndex] : const Center(child: CircularProgressIndicator(),),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: onCreateTopup,
       ),
+      body: (_isLoaded)
+          ? _bodies[_bodyIndex]
+          : (_isError)
+          ? Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0),
+              child: Text('Something\'s wrong.'),
+            ),
+            ElevatedButton(
+              onPressed: _reload,
+              child: const Text('Reload'),
+            ),
+          ],
+        ),
+      )
+          : const Center(child: CircularProgressIndicator(),),
     );
   }
 }
