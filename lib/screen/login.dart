@@ -105,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
     else {
-      _showError('Terjadi masalah');
+      _showError('Something\'s wrong.');
     }
 
     setState(() {

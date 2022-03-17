@@ -63,13 +63,27 @@ class Request with Urls implements _Req {
     );
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      String? priv;
-      if (privilege is Buyer) priv = 'client';
-      if (privilege is Seller) priv = 'merchant';
-      if (privilege is Cashier) priv = 'cashier';
-      if (privilege is Admin) priv = 'admin';
-      final accountData = data[priv!];
-      final account = Account(accountData['id'], phone, accountData['name'],
+      String accountName = '';
+      int? accountId;
+      if (privilege is Buyer) {
+        const priv = 'client';
+        accountName = data[priv]['name'];
+        accountId = data[priv]['id'];
+      }
+      if (privilege is Seller) {
+        const priv = 'merchant';
+        accountName = data[priv]['name'];
+        accountId = data[priv]['id'];
+      }
+      if (privilege is Cashier) {
+        const priv = 'cashier';
+        accountName = data[priv];
+      }
+      if (privilege is Admin) {
+        const priv = 'admin';
+        accountName = data[priv];
+      }
+      final account = Account(accountId ?? 0, phone, accountName,
           privilege, token: data['token']);
 
       await Account.setAccount(account);
