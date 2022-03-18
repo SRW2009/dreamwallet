@@ -60,7 +60,7 @@ class _TopupScreenState extends State<TopupScreen> {
                     title: const Text('Client'),
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(8.0).copyWith(bottom: 0.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [

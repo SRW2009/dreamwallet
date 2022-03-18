@@ -1,12 +1,12 @@
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/objects/request/request.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
+import 'package:dreamwallet/screen/listview/topup.dart';
 import 'package:dreamwallet/screen/listview/transaction.dart';
 import 'package:dreamwallet/screen/login.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
@@ -27,6 +27,7 @@ class _BuyerPageState extends State<BuyerPage> {
   bool _isError = false;
   late final List<Widget> _bodies = [
     BuyerScreen(reload: _reload,),
+    const TopupScreen(),
     const TransactionScreen(),
   ];
 
@@ -127,10 +128,21 @@ class _BuyerPageState extends State<BuyerPage> {
             ListTile(
               selected: (_bodyIndex == 1),
               leading: const Icon(Icons.list),
-              title: const Text('Transaction List'),
+              title: const Text('Topup List'),
               onTap:() {
                 setState(() {
                   _bodyIndex = 1;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              selected: (_bodyIndex == 2),
+              leading: const Icon(Icons.list),
+              title: const Text('Transaction List'),
+              onTap:() {
+                setState(() {
+                  _bodyIndex = 2;
                 });
                 Navigator.pop(context);
               },
@@ -209,8 +221,9 @@ class _BuyerScreenState extends State<BuyerScreen> {
                   _currentTimer = 0;
                   _isLoadingTransaction = false;
                 });
-                _stopDoTransaction = false;
                 timer.cancel();
+                _stopDoTransaction = false;
+                widget.reload();
                 return;
               }
 
@@ -282,6 +295,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
     if (statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Success')));
+
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(

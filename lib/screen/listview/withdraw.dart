@@ -60,7 +60,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                     title: const Text('Admin'),
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(8.0).copyWith(bottom: 0.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
