@@ -11,6 +11,7 @@ import 'package:dreamwallet/style/buttonstyle.dart';
 import 'admins/accountscreen.dart';
 import 'admins/reportscreen.dart';
 import 'admins/transactionscreen.dart';
+import 'package:flutter/foundation.dart' as foundation;
 
 class AdminPage extends StatefulWidget{
   const AdminPage({Key? key}) : super(key: key);
@@ -60,7 +61,7 @@ class AdminPageState extends State<AdminPage>{
       const AdminTransactionScreen(),
       AdminWithdrawScreen(reload: reload,),
       AdminTopupScreen(reload: reload,),
-      const AdminReportScreen(),
+      if (foundation.kIsWeb) const AdminReportScreen(),
     ]);
     _isLoaded = _load();
     super.initState();
