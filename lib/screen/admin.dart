@@ -9,6 +9,7 @@ import 'package:dreamwallet/screen/login.dart';
 import 'package:flutter/material.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
 import 'admins/accountscreen.dart';
+import 'admins/reportscreen.dart';
 import 'admins/transactionscreen.dart';
 
 class AdminPage extends StatefulWidget{
@@ -59,7 +60,7 @@ class AdminPageState extends State<AdminPage>{
       const AdminTransactionScreen(),
       AdminWithdrawScreen(reload: reload,),
       AdminTopupScreen(reload: reload,),
-      //const AdminReportScreen(),
+      const AdminReportScreen(),
     ]);
     _isLoaded = _load();
     super.initState();
@@ -146,7 +147,7 @@ class AdminPageState extends State<AdminPage>{
                 Navigator.pop(context);
               },
             ),
-            /*ListTile(
+            ListTile(
               selected: (_bodyIndex == 5),
               leading: const Icon(Icons.book),
               title: const Text('Report'),
@@ -156,7 +157,7 @@ class AdminPageState extends State<AdminPage>{
                 });
                 Navigator.pop(context);
               },
-            ),*/
+            ),
           ],
         ),
       ),
