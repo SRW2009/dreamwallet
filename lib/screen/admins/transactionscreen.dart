@@ -1,4 +1,6 @@
 
+import 'package:dreamwallet/components/form_dropdown_search.dart';
+import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/objects/transaction.dart';
 import 'package:dreamwallet/objects/envar.dart';
@@ -12,14 +14,41 @@ class AdminTransactionScreen extends StatefulWidget {
 }
 
 class _AdminTransactionScreenState extends State<AdminTransactionScreen> {
+  // insert null cashier to nullify filter
+  final _dummyClient = Account.parseClient({'id':-1, 'name':''});
   late ScrollController _scrollController;
   late List<Transaction> _transactionList;
+
+  int _listRebuildCount = 0;
+  List<Account>? _clientList;
+  double? _clientTotalTransaction;
 
   @override
   void initState() {
     _scrollController = ScrollController();
     _transactionList = Temp.transactionList!;
     super.initState();
+  }
+
+  void _doFilter(Account item) {
+    _transactionList = Temp.transactionList!;
+    if (item == _dummyClient) {
+      setState(() {
+        _clientTotalTransaction = null;
+        _listRebuildCount++;
+      });
+      return;
+    }
+    double total = 0;
+    _transactionList = _transactionList
+        .where((element) => element.client == item).toList();
+    for (var o in _transactionList) {
+      total += o.total;
+    }
+    setState(() {
+      _clientTotalTransaction = total;
+      _listRebuildCount++;
+    });
   }
 
   @override
@@ -40,9 +69,84 @@ class _AdminTransactionScreenState extends State<AdminTransactionScreen> {
                   ),
                 )),
               ),
-              _ListView(_transactionList.reversed.toList()),
+              SliverToBoxAdapter(
+                child: Card(child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: _filterTopupView(),
+                )),
+              ),
+              _ListView(
+                _transactionList.reversed.toList(),
+                key: ValueKey(_listRebuildCount),
+              ),
             ],
           ),
+    );
+  }
+
+  Widget _filterTopupView() {
+    final totalTransactionText = Text(
+        _clientTotalTransaction == null
+            ? ''
+            : 'Total Transaction: ${EnVar.moneyFormat(_clientTotalTransaction)}',
+      style: Theme.of(context).textTheme.subtitle1,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Filter', style: Theme.of(context).textTheme.headline4,),
+        const SizedBox(height: 16.0),
+        FormDropdownSearch<Account>(
+          label: 'Client',
+          compareFn: (o1, o2) => o1?.id == o2?.id,
+          onPick: _doFilter,
+          showItem: (item) {
+            if (item.id == -1) return 'None';
+            return '${item.id} - ${item.name}';
+          },
+          selectedItem: () => _dummyClient,
+          onFind: (query) async {
+            if (_clientList == null) {
+              _clientList = _transactionList
+                  .map<Account>((e) => e.client).toList();
+              _clientList!.insert(0, _dummyClient);
+              var list = <Account>[];
+              _clientList!.retainWhere((e) {
+                if (list.contains(e)) return false;
+                list.add(e);
+                return true;
+              });
+            }
+            if (query == null || query.isEmpty) return _clientList!;
+            return _clientList!.where((element) {
+              if (element.id.toString().contains(query)) return true;
+              if (element.name.toLowerCase().contains(query)) return true;
+              return false;
+            }).toList();
+          },
+        ),
+        const SizedBox(height: 12.0),
+        LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.minWidth < 650) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FittedBox(child: totalTransactionText, fit: BoxFit.scaleDown,),
+                  ],
+                );
+              }
+              return Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  totalTransactionText,
+                ],
+              );
+            }
+        ),
+      ],
     );
   }
 }
