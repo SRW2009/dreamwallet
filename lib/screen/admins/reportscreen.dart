@@ -77,6 +77,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
   Future<_Report> _getAccountReport(Account account) async {
     int totalDebit = 0;
     int totalCredit = 0;
+    int? totalSaldo;
     final transactionList = <Transaction>[];
     List<Topup>? topupList;
 
@@ -108,8 +109,37 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
         }
       }
     }
+    if (account.status is Cashier) {
+      for (var o in Temp.topupList!) {
+        if (o.cashier == account) {
+          topupList ??= [];
+          topupList.add(o);
 
-    int totalSaldo = totalDebit - totalCredit;
+          if (o.verifiedByAdmin()) {
+            totalCredit += o.total.toInt();
+          } else {
+            totalDebit += o.total.toInt();
+          }
+        }
+      }
+      totalSaldo = totalDebit + totalCredit;
+    }
+    if (account.status is Admin) {
+      for (var o in Temp.topupList!) {
+        if (o.admin == account) {
+          topupList ??= [];
+          topupList.add(o);
+          totalDebit += o.total.toInt();
+        }
+      }
+      for (var o in Temp.withdrawList!) {
+        if (o.admin == account) {
+          totalCredit += o.total.toInt();
+        }
+      }
+    }
+
+    totalSaldo ??= totalDebit - totalCredit;
     return _Report(account.id,account.name,  account.status, totalCredit, totalDebit, totalSaldo, transactionList, accountTopups: topupList);
   }
 
@@ -127,19 +157,14 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       _isLoading = true;
     });
 
-    bool timeout = false;
-    try {
-      List<Account> accounts = await _getAccountList();
-      _loadStep.value = 1;
-      _accountsLoadProgress.value = _LoadingValue(0, accounts.length);
-      _reports = [];
+    List<Account> accounts = await _getAccountList();
+    _loadStep.value = 1;
+    _accountsLoadProgress.value = _LoadingValue(0, accounts.length);
+    _reports = [];
 
-      var reports = _getReports(accounts);
-      await for (final value in reports) {
-        _accountsLoadProgress.value = value;
-      }
-    } on Exception {
-      timeout = true;
+    var reports = _getReports(accounts);
+    await for (final value in reports) {
+      _accountsLoadProgress.value = value;
     }
 
     setState(() {
@@ -201,6 +226,40 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
           }
         }
       }
+    }
+
+    data.add('\nCashier:\n');
+    for (var o in _reports!.where((element) => element.accountStatus is Cashier).toList()) {
+      data.add('- (${o.accountId}) ${o.accountName}:\n'
+          '  Total Money On Hand = ${EnVar.moneyFormat(o.accountDebit)};\n'
+          '  Total Money Reported = ${EnVar.moneyFormat(o.accountCredit)};\n'
+          '  Total Topup = ${EnVar.moneyFormat(o.accountSum)};\n');
+
+      if (o.accountTopups != null) {
+        data.add('  Topup List:\n');
+        for (var o in o.accountTopups!) {
+          data.add('  - ${o.created_at.split('T')[1].split('.')[0]}: ${o.client.name} -> ${EnVar.moneyFormat(o.total)}\n');
+        }
+      }
+
+      data.add('\n');
+    }
+
+    data.add('\nAdmin:\n');
+    for (var o in _reports!.where((element) => element.accountStatus is Admin).toList()) {
+      data.add('- (${o.accountId}) ${o.accountName}:\n'
+          '  Total Topup = ${EnVar.moneyFormat(o.accountDebit)};\n'
+          '  Total Withdrawal = ${EnVar.moneyFormat(o.accountCredit)};\n'
+      );
+
+      if (o.accountTopups != null) {
+        data.add('  Topup List:\n');
+        for (var o in o.accountTopups!) {
+          data.add('  - ${o.created_at.split('T')[1].split('.')[0]}: ${o.client.name} -> ${EnVar.moneyFormat(o.total)}\n');
+        }
+      }
+
+      data.add('\n');
     }
 
     data.add('\nPossible Duplicate Transactions:\n');
