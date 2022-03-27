@@ -1,5 +1,6 @@
 
 import 'package:dreamwallet/components/form_dropdown_search.dart';
+import 'package:dreamwallet/dialogs/migrate_dialog.dart';
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/objects/transaction.dart';

@@ -30,10 +30,12 @@ class AdminPageState extends State<AdminPage>{
     await Temp.fillTransactionData();
     await Temp.fillWithdrawData();
     await Temp.fillTopupData();
+    await Temp.fillOldAccountList();
 
     if (Temp.transactionList == null
         || Temp.withdrawList == null
-        || Temp.topupList == null) return false;
+        || Temp.topupList == null
+        || Temp.oldAccountList == null) return false;
 
     return true;
   }

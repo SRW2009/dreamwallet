@@ -40,6 +40,7 @@ class Account {
   factory Account.parseAdmin(dynamic c) => Account(
     c['id'], '', c['name'], Admin(),
   );
+  factory Account.parseOld(dynamic c) => Account(0, c['account_mobile'], c['account_name'], Buyer());
 
   @override
   bool operator ==(Object other) => (other is Account)

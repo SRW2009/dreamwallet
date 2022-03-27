@@ -74,10 +74,12 @@ class _BaseDialogActionsState extends State<BaseDialogActions> {
           style: ButtonStyle(
             padding: MaterialStateProperty.all(const EdgeInsets.all(16.0)),
           ),
-          onPressed: (widget.onSave == null) ? null : () {
+          onPressed: (widget.onSave == null) ? null : () async {
             if (widget.formKey != null && widget.formKey!.currentState!.validate() || widget.formKey == null) {
-              widget.onSave!();
-              Navigator.pop(context, true);
+              await widget.onSave!();
+              try {
+                Navigator.pop(context, true);
+              } catch (e) {}
             }
           },
         ),

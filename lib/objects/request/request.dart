@@ -38,6 +38,9 @@ abstract class _Req {
   Future<int> adminVerifyTopups(List<int> ids);
   Future<int> adminTopup(double total, int clientId);
   Future<int> adminCreateWithdrawal(int merchantId, double total);
+
+  Future<List<Account>> adminGetOldAccounts();
+  Future<bool> adminMigrate(Account from, Account to);
 }
 
 class Request with Urls implements _Req {
@@ -397,28 +400,55 @@ class Request with Urls implements _Req {
 
   @override
   Future<List<Topup>> clientGetTopups() async {
-    /*final topupList = <Topup>[
-      Topup(
-        0, 100000,
-        Account.parseClient({'id':0, 'name':''}),
-        null,
-        Account.parseCashier({'id':0, 'name':'Kasir QBS'}),
-        '2022-03-01',
-      ),
-    ];*/
-
     Account account = (await Account.getAccount())!;
 
     final response = await http.get(
       Uri.parse(clientGetTopupsUrl),
       headers: EnVar.HTTP_HEADERS(token: account.token),
     );
-
     if (response.statusCode == 200) {
       final list = jsonDecode(response.body) as List;
       return list.map<Topup>((e) => Topup.parse(e)).toList();
     }
     throw Exception();
+  }
+
+  @override
+  Future<List<Account>> adminGetOldAccounts() async {
+    const url = '${EnVar.OLD_API_URL_HOME}/account';
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: EnVar.HTTP_HEADERS(),
+    );
+    if (response.statusCode == 200) {
+      final list = jsonDecode(response.body)['response'] as List;
+
+      return list.where((e) => AccountPrivilege.parse(e['account_status']) is Buyer)
+          .map<Account>((e) => Account.parseOld(e)).toList();
+    }
+    throw Exception();
+  }
+
+  @override
+  Future<bool> adminMigrate(Account from, Account to) async {
+    final url = '${EnVar.OLD_API_URL_HOME}/transaction?depositor=${from.mobile}';
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: EnVar.HTTP_HEADERS(),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body)['response'];
+
+      int sum = data['sum'];
+      sum -= data['total_withdraw'] as int;
+      int totalMoney = sum;
+
+      final statusCode = await adminTopup(totalMoney.toDouble(), to.id);
+      return statusCode == 201;
+    }
+    return false;
   }
 }
 

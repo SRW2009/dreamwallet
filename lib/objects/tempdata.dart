@@ -19,6 +19,9 @@ class Temp {
   static double? cashierMoneyOnHand;
   static double? cashierMoneyReported;
 
+  // older version
+  static List<Account>? oldAccountList;
+
   static Future<void> fillTransactionData() async {
     try {
       final account = (await Account.getAccount())!;
@@ -83,6 +86,18 @@ class Temp {
       }
       cashierMoneyOnHand = moneyOnHand;
       cashierMoneyReported = moneyReported;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  static Future<void> fillOldAccountList() async {
+    try {
+      final account = (await Account.getAccount())!;
+
+      if (account.status is Admin) {
+        oldAccountList = await Request().adminGetOldAccounts();
+      }
     } catch (e) {
       print(e);
     }

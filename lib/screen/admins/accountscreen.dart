@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/account/account_privilege.dart';
 import 'package:dreamwallet/objects/request/request.dart';
+import 'package:dreamwallet/screen/admins/accountdetailscreen.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:flutter/material.dart';
 
@@ -279,11 +280,6 @@ class _ListView extends StatefulWidget {
 class _ListViewState extends State<_ListView> {
   int _filterCount = 0;
 
-  /*static const STATUS_ALL = 0;
-  static const STATUS_BUYER = 1;
-  static const STATUS_SELLER = 2;
-  static const STATUS_ADMIN = 3;*/
-
   static const ACTIVE_ALL = 0;
   static const ACTIVE_ACTIVATED = 1;
   static const ACTIVE_NOTACTIVATED = 2;
@@ -296,27 +292,12 @@ class _ListViewState extends State<_ListView> {
   final int statusFlex = 1;
   final int isActiveFlex = 1;
 
-  int statusGroup = 0;
   int activeGroup = 0;
 
   void filter() {
     _filteredList = widget.list;
     // filter query
     _filteredList = _filteredList.where((element) => element.name.toLowerCase().contains(query.toLowerCase())).toList();
-    // filter status
-    /*switch (statusGroup) {
-      case STATUS_BUYER:
-        _filteredList = _filteredList.where((element) => element.status is Buyer).toList();
-        break;
-      case STATUS_SELLER:
-        _filteredList = _filteredList.where((element) => element.status is Seller).toList();
-        break;
-      case STATUS_ADMIN:
-        _filteredList = _filteredList.where((element) => element.status is Admin).toList();
-        break;
-      default:
-        break;
-    }*/
     // filter activated
     switch (activeGroup) {
       case ACTIVE_ACTIVATED:
@@ -365,84 +346,6 @@ class _ListViewState extends State<_ListView> {
                 mainAxisSize: MainAxisSize.max,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /*Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Radio<int>(
-                            value: STATUS_ALL,
-                            groupValue: statusGroup,
-                            onChanged: (val) {
-                              if (val != null && statusGroup != val) {
-                                statusGroup = STATUS_ALL;
-                                filter();
-                              }
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Text('Show all', style: Theme.of(context).textTheme.caption,),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Radio<int>(
-                            value: STATUS_BUYER,
-                            groupValue: statusGroup,
-                            onChanged: (val) {
-                              if (val != null && statusGroup != val) {
-                                statusGroup = STATUS_BUYER;
-                                filter();
-                              }
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Text('Show buyer only', style: Theme.of(context).textTheme.caption,),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Radio<int>(
-                            value: STATUS_SELLER,
-                            groupValue: statusGroup,
-                            onChanged: (val) {
-                              if (val != null && statusGroup != val) {
-                                statusGroup = STATUS_SELLER;
-                                filter();
-                              }
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Text('Show seller only', style: Theme.of(context).textTheme.caption,),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Radio<int>(
-                            value: STATUS_ADMIN,
-                            groupValue: statusGroup,
-                            onChanged: (val) {
-                              if (val != null && statusGroup != val) {
-                                statusGroup = STATUS_ADMIN;
-                                filter();
-                              }
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Text('Show admin only', style: Theme.of(context).textTheme.caption,),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 20.0,),*/
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -518,6 +421,8 @@ class _ListViewState extends State<_ListView> {
             Expanded(flex: statusFlex, child: Text('Status', style: Theme.of(context).textTheme.headline6,)),
             const SizedBox(width: 8.0,),
             Expanded(flex: isActiveFlex, child: Text('Active', style: Theme.of(context).textTheme.headline6,)),
+            const SizedBox(width: 8.0,),
+            SizedBox(width: 140.0, child: Text('Action', style: Theme.of(context).textTheme.headline6,)),
           ],
         ),
         const Divider(height: 24.0, thickness: 1.0, color: Colors.black,),
@@ -552,6 +457,22 @@ class _ListViewState extends State<_ListView> {
                         ),
                       ],
                     )),
+                    const SizedBox(width: 8.0,),
+                    SizedBox(
+                      width: 140.0,
+                      child: Column(
+                        children: [
+                          TextButton(
+                            style: MyButtonStyle.primaryTextButtonStyle(context),
+                            child: const Text('DETAIL'),
+                            onPressed: () {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (c) => AdminAccountDetailScreen(account: o)));
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
                 const Divider(thickness: 1.0,),
