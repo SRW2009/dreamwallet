@@ -1,5 +1,4 @@
 
-import 'package:dreamwallet/components/form_dropdown_search.dart';
 import 'package:dreamwallet/dialogs/migrate_dialog.dart';
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
@@ -29,14 +28,14 @@ class _AdminAccountDetailScreenState extends State<AdminAccountDetailScreen> {
   void load() {
     double total1 = 0;
     _topupList = Temp.topupList!
-        .where((element) => element.client == widget.account).toList();
+        .where((element) => element.client.id == widget.account.id).toList();
     for (var o in _topupList) {
       total1 += o.total;
     }
     _totalTopup = total1;
     double total2 = 0;
     _transactionList = Temp.transactionList!
-        .where((element) => element.client == widget.account).toList();
+        .where((element) => element.client.id == widget.account.id).toList();
     for (var o in _transactionList) {
       total2 += o.total;
     }
@@ -102,9 +101,14 @@ class _AdminAccountDetailScreenState extends State<AdminAccountDetailScreen> {
       key: ValueKey('tl_tp_tx.$_rebuildCount'),
     );
     final totalTransactionText = Text(
-        'Total Transaction: ${EnVar.moneyFormat(_totalTransaction)}',
+      'Total Transaction: ${EnVar.moneyFormat(_totalTransaction)}',
       style: Theme.of(context).textTheme.subtitle1,
       key: ValueKey('tl_tr_tx.$_rebuildCount'),
+    );
+    final saldoText = Text(
+      'Saldo: ${EnVar.moneyFormat(_totalTopup-_totalTransaction)}',
+      style: Theme.of(context).textTheme.subtitle1,
+      key: ValueKey('s_tx.$_rebuildCount'),
     );
     final migrateBtn = ElevatedButton(
       child: const Text('Migrate'),
@@ -137,6 +141,7 @@ class _AdminAccountDetailScreenState extends State<AdminAccountDetailScreen> {
                   children: [
                     FittedBox(child: totalTopupText, fit: BoxFit.scaleDown,),
                     FittedBox(child: totalTransactionText, fit: BoxFit.scaleDown,),
+                    FittedBox(child: saldoText, fit: BoxFit.scaleDown,),
                     migrateBtn,
                   ],
                 );
@@ -147,6 +152,7 @@ class _AdminAccountDetailScreenState extends State<AdminAccountDetailScreen> {
                 children: [
                   totalTopupText,
                   totalTransactionText,
+                  saldoText,
                   migrateBtn,
                 ],
               );

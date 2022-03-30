@@ -38,9 +38,19 @@ class _MigrateDialogState extends State<MigrateDialog> {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
-                  child: Text(
-                    widget.selectedClient.name,
-                    style: const TextStyle(fontSize: 20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.selectedClient.name,
+                        style: const TextStyle(fontSize: 18.0),
+                      ),
+                      const SizedBox(height: 6.0),
+                      Text(
+                        widget.selectedClient.mobile,
+                        style: const TextStyle(fontSize: 18.0),
+                      ),
+                    ],
                   ),
                 ),
                 const Padding(
@@ -49,7 +59,7 @@ class _MigrateDialogState extends State<MigrateDialog> {
                 ),
                 FormDropdownSearch<Account>(
                   label: 'Client',
-                  compareFn: (o1, o2) => o1?.id == o2?.id,
+                  compareFn: (o1, o2) => o1 == o2,
                   onPick: (item) {
                     setState(() {
                       _clientCon = item;

@@ -45,11 +45,13 @@ class Account {
   @override
   bool operator ==(Object other) => (other is Account)
       && other.id == id
-      && other.status == status;
+      && other.status == status
+      && other.name == name
+      && other.mobile == mobile;
 
   @override
   int get hashCode =>
-      id.hashCode ^ status.hashCode;
+      id.hashCode ^ status.hashCode ^ name.hashCode ^ mobile.hashCode;
 
   static Future<Account?> getAccount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

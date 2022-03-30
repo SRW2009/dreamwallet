@@ -5,9 +5,9 @@ import 'package:dreamwallet/components/form_dropdown_search.dart';
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/request/request.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
+import 'package:dreamwallet/objects/transaction.dart';
 import 'package:dreamwallet/objects/withdraw.dart';
 import 'package:dreamwallet/objects/envar.dart';
-import 'package:dreamwallet/screen/admin.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:flutter/material.dart';
 
@@ -26,6 +26,7 @@ class _AdminWithdrawScreenState extends State<AdminWithdrawScreen> {
   final _amountCon = TextEditingController();
   late List<Withdraw> _withdrawList;
   List<Account>? _merchantList;
+  double? _maxWithdraw;
 
   Future<void> _createWithdrawal() async {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -59,8 +60,18 @@ class _AdminWithdrawScreenState extends State<AdminWithdrawScreen> {
             label: 'Merchant',
             compareFn: (o1, o2) => o1?.id == o2?.id,
             onPick: (item) {
+              double maxAmount = 0;
+              for (var element in Temp.transactionList!
+                  .where((element) => element.merchant == item)) {
+                maxAmount += element.total;
+              }
+              for (var element in _withdrawList
+                  .where((element) => element.merchant == item)) {
+                maxAmount -= element.total;
+              }
               setState(() {
                 _merchantCon = item;
+                _maxWithdraw = maxAmount;
               });
             },
             showItem: (item) => '${item.id} - ${item.name}',
@@ -76,14 +87,16 @@ class _AdminWithdrawScreenState extends State<AdminWithdrawScreen> {
           ),
           TextFormField(
             controller: _amountCon,
-            decoration: const InputDecoration(
-              labelText: 'Withdraw amount',
+            decoration: InputDecoration(
+              labelText: 'Max Withdraw amount: ${EnVar.moneyFormat(_maxWithdraw ?? 0)}',
               prefixText: 'IDR ',
             ),
             validator: (e) {
               if (e == null || e.isEmpty) return 'Please fill the field.';
-              int? value = int.tryParse(_amountCon.text);
+              double? value = double.tryParse(_amountCon.text);
               if (value == null) return 'Only input numbers in this field.';
+              if (_merchantCon == null || _maxWithdraw == null) return 'Select Merchant first!';
+              if (value > _maxWithdraw!) return 'Withdraw amount can\'t be greater than max amount!';
               return null;
             },
           ),
