@@ -1,17 +1,16 @@
 
+import 'package:flutter/material.dart';
 import 'package:dreamwallet/objects/account/account.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
-import 'package:dreamwallet/screen/admins/accountscreen.dart';
-import 'package:dreamwallet/screen/admins/homescreen.dart';
-import 'package:dreamwallet/screen/admins/topupscreen.dart';
-import 'package:dreamwallet/screen/admins/withdrawscreen.dart';
-import 'package:dreamwallet/screen/login.dart';
-import 'package:flutter/material.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
+
+import 'login.dart';
 import 'admins/accountscreen.dart';
 import 'admins/reportscreen.dart';
 import 'admins/transactionscreen.dart';
-import 'package:flutter/foundation.dart' as foundation;
+import 'admins/homescreen.dart';
+import 'admins/topupscreen.dart';
+import 'admins/withdrawscreen.dart';
 
 class AdminPage extends StatefulWidget{
   const AdminPage({Key? key}) : super(key: key);
@@ -63,7 +62,7 @@ class AdminPageState extends State<AdminPage>{
       const AdminTransactionScreen(),
       AdminWithdrawScreen(reload: reload,),
       AdminTopupScreen(reload: reload,),
-      if (foundation.kIsWeb) const AdminReportScreen(),
+      const AdminReportScreen(),
     ]);
     _isLoaded = _load();
     super.initState();

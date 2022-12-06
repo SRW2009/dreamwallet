@@ -8,10 +8,9 @@ import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/objects/topup.dart';
 import 'package:dreamwallet/objects/transaction.dart';
+import 'package:dreamwallet/stubs/file-downloader/file_downloader_interface.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
-import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
-import 'dart:html' as html;
 
 class _LoadingValue {
   int progress;
@@ -45,11 +44,13 @@ class AdminReportScreen extends StatefulWidget {
 }
 
 class _AdminReportScreenState extends State<AdminReportScreen> {
-  static const _topupFromTransferAmount = [ 200000, 400000, 700000 ];
-  bool _isLoading = false;
-  final ValueNotifier<int> _loadStep = ValueNotifier(0);
-  final ValueNotifier<_LoadingValue> _accountsLoadProgress = ValueNotifier(_LoadingValue(0, 0));
-  List<_Report>? _reports;
+  static const topupFromTransferAmount = [ 200000, 400000, 700000 ];
+  final FileDownloader fileDownloader = FileDownloader();
+
+  bool isLoading = false;
+  final ValueNotifier<int> loadStep = ValueNotifier(0);
+  final ValueNotifier<_LoadingValue> accountsLoadProgress = ValueNotifier(_LoadingValue(0, 0));
+  List<_Report>? reports;
 
   Future<List<Account>> _getAccountList() async {
     final _accountList = <Account>[];
@@ -147,38 +148,38 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
     for (var i = 0; i < accounts.length; ++i) {
       var account = accounts[i];
       var report = await _getAccountReport(account);
-      _reports!.add(report);
+      reports!.add(report);
       yield _LoadingValue(i+1, accounts.length);
     }
   }
 
   Future _getReport() async {
     setState(() {
-      _isLoading = true;
+      isLoading = true;
     });
 
     List<Account> accounts = await _getAccountList();
-    _loadStep.value = 1;
-    _accountsLoadProgress.value = _LoadingValue(0, accounts.length);
-    _reports = [];
+    loadStep.value = 1;
+    accountsLoadProgress.value = _LoadingValue(0, accounts.length);
+    reports = [];
 
-    var reports = _getReports(accounts);
-    await for (final value in reports) {
-      _accountsLoadProgress.value = value;
+    var r = _getReports(accounts);
+    await for (final value in r) {
+      accountsLoadProgress.value = value;
     }
 
     setState(() {
-      _isLoading = false;
+      isLoading = false;
     });
   }
 
-  void _downloadReport() {
+  void _downloadReport() async {
     final data = ['Dreampay Report\n'];
 
     data.add('\nBuyer:\n');
     /// {'buyer1' : [transaction1, transaction2], }
     final Map<String, List<Topup>> pastEventTopups = {};
-    for (var o in _reports!.where((element) => element.accountStatus is Buyer).toList()) {
+    for (var o in reports!.where((element) => element.accountStatus is Buyer).toList()) {
       data.add('- (${o.accountId}) ${o.accountName}:\n'
           '  Total Topup = ${EnVar.moneyFormat(o.accountDebit)};\n'
           '  Total Transaksi = ${EnVar.moneyFormat(o.accountCredit)};\n'
@@ -187,7 +188,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       // Past Event Topups
       for (var topup in o.accountTopups!) {
         pastEventTopups[o.accountName] ??= [];
-        if (!_topupFromTransferAmount.contains(topup.total.toInt())) {
+        if (!topupFromTransferAmount.contains(topup.total.toInt())) {
           pastEventTopups[o.accountName]!.add(topup);
         }
       }
@@ -201,7 +202,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
     ///   ]
     /// }}
     final Map<String, Map<String, List<List<Transaction>>>> possibleDuplicateTransactions = {};
-    for (var o in _reports!.where((element) => element.accountStatus is Seller).toList()) {
+    for (var o in reports!.where((element) => element.accountStatus is Seller).toList()) {
       data.add('- (${o.accountId}) ${o.accountName}:\n'
           '  Total Transaksi = ${EnVar.moneyFormat(o.accountDebit)};\n'
           '  Total Withdraw = ${EnVar.moneyFormat(o.accountCredit)};\n'
@@ -229,7 +230,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
     }
 
     data.add('\nCashier:\n');
-    for (var o in _reports!.where((element) => element.accountStatus is Cashier).toList()) {
+    for (var o in reports!.where((element) => element.accountStatus is Cashier).toList()) {
       data.add('- (${o.accountId}) ${o.accountName}:\n'
           '  Total Money On Hand = ${EnVar.moneyFormat(o.accountDebit)};\n'
           '  Total Money Reported = ${EnVar.moneyFormat(o.accountCredit)};\n'
@@ -246,7 +247,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
     }
 
     data.add('\nAdmin:\n');
-    for (var o in _reports!.where((element) => element.accountStatus is Admin).toList()) {
+    for (var o in reports!.where((element) => element.accountStatus is Admin).toList()) {
       data.add('- (${o.accountId}) ${o.accountName}:\n'
           '  Total Topup = ${EnVar.moneyFormat(o.accountDebit)};\n'
           '  Total Withdrawal = ${EnVar.moneyFormat(o.accountCredit)};\n'
@@ -291,13 +292,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       data.add('\n');
     }
 
-    if (foundation.kIsWeb) {
-      var blob = html.Blob(data, 'text/plain', 'native');
-
-      html.AnchorElement(
-        href: html.Url.createObjectUrlFromBlob(blob).toString(),
-      )..setAttribute("download", "dreampay report.txt")..click();
-    }
+    fileDownloader.downloadFile(data);
   }
 
   @override
@@ -314,12 +309,12 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
             Expanded(
               child: Card(
                 child: ValueListenableBuilder<int>(
-                  valueListenable: _loadStep,
+                  valueListenable: loadStep,
                   builder: (context, step, child) => Column(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (!_isLoading && _reports == null)
+                    if (!isLoading && reports == null)
                       Column(
                         children: [
                           ElevatedButton(
@@ -333,7 +328,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                           const Text('This process might take longer than expected.', style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
                         ],
                       ),
-                    if (!_isLoading && _reports != null)
+                    if (!isLoading && reports != null)
                       Column(
                         children: [
                           ElevatedButton(
@@ -347,15 +342,15 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                           const Text('Report loaded and ready to download.', style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
                         ],
                       ),
-                    if (_isLoading && step == 0) Column(
+                    if (isLoading && step == 0) Column(
                       children: const [
                         CircularProgressIndicator(),
                         SizedBox(height: 14.0,),
                         Text('Getting all account...', style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),),
                       ],
                     ),
-                    if (_isLoading && step == 1) ValueListenableBuilder<_LoadingValue>(
-                      valueListenable: _accountsLoadProgress,
+                    if (isLoading && step == 1) ValueListenableBuilder<_LoadingValue>(
+                      valueListenable: accountsLoadProgress,
                       builder: (context, progress, child) {
                         return Column(
                           children: [

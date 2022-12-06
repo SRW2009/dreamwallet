@@ -8,7 +8,6 @@ import 'package:dreamwallet/screen/login.dart';
 import 'package:dreamwallet/style/buttonstyle.dart';
 import 'package:dreamwallet/style/inputdecoration.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class SellerPage extends StatefulWidget {

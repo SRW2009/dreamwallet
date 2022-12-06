@@ -220,6 +220,7 @@ class Request with Urls implements _Req {
       final list = jsonDecode(response.body) as List;
       return list.map<Topup>((e) => Topup.parse(e)).toList();
     }
+    print(response.body);
     throw Exception();
   }
 
@@ -236,6 +237,7 @@ class Request with Urls implements _Req {
       final list = jsonDecode(response.body) as List;
       return list.map<Withdraw>((e) => Withdraw.parse(e)).toList();
     }
+    print(response.body);
     throw Exception();
   }
 
@@ -379,6 +381,7 @@ class Request with Urls implements _Req {
       final list = jsonDecode(response.body) as List;
       return list.map<Transaction>((e) => Transaction.parse(e)).toList();
     }
+    print(response.body);
     throw Exception();
   }
 
@@ -427,6 +430,7 @@ class Request with Urls implements _Req {
       return list.where((e) => AccountPrivilege.parse(e['account_status']) is Buyer)
           .map<Account>((e) => Account.parseOld(e)).toList();
     }
+    print(response.body);
     throw Exception();
   }
 

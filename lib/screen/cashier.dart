@@ -1,7 +1,5 @@
 
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:dreamwallet/dialogs/topup_create_dialog.dart';
 import 'package:dreamwallet/objects/account/account.dart';
@@ -9,11 +7,8 @@ import 'package:dreamwallet/objects/envar.dart';
 import 'package:dreamwallet/objects/request/request.dart';
 import 'package:dreamwallet/objects/tempdata.dart';
 import 'package:dreamwallet/screen/listview/topup.dart';
-import 'package:dreamwallet/screen/listview/transaction.dart';
 import 'package:dreamwallet/screen/login.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class CashierPage extends StatefulWidget {
   const CashierPage({Key? key}) : super(key: key);

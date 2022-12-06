@@ -96,7 +96,8 @@ class Temp {
       final account = (await Account.getAccount())!;
 
       if (account.status is Admin) {
-        oldAccountList = await Request().adminGetOldAccounts();
+        // TODO: Request accounts from old db (BACKEND)
+        oldAccountList = [];//await Request().adminGetOldAccounts();
       }
     } catch (e) {
       print(e);
